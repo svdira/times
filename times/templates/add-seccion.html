@@ -1,0 +1,328 @@
+{% load static%}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo%}THE TIMES{% endblock %}</title>
+  <style>
+
+
+
+    @font-face {
+        font-family: "Claris";
+        src: url("{% static 'fonts/CharisSIL-Regular.ttf' %}") format("truetype");
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 1.5em;
+    box-sizing: border-box;
+}
+
+.single-panel {
+    width: 60%;
+    box-sizing: border-box;
+}
+
+/* Mobile */
+@media screen and (max-width: 768px) {
+    .single-panel {
+        width: 100%;
+    }
+}
+
+    .responsive-textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.8em;
+  font-size: 1.1em;
+  line-height: 1.5em;
+  font-family: 'Calibri','Arial', sans-serif;
+  height: 80vh;
+}
+
+
+
+  .responsive-text {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 1.5em;
+  padding: 0.3em;
+  font-size: 1.1em;
+  line-height: 1.5em;
+  font-family: 'Calibri','Arial', sans-serif;
+}
+
+    /* Mobile responsiveness */
+    @media screen and (max-width: 768px) {
+      .left-panel,
+      .right-panel {
+        width: 100%;
+        margin-left: 0;
+        float: none;
+      }
+    }
+
+    .container {
+      width: 100%;
+    }
+
+    /* Imagen encabezado */
+    .encabezado img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+
+    }
+
+    /* Fecha */
+    .fecha {
+      text-align: center;
+      font-size: 1em;
+      padding: 10px 0;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      color: black;
+      font-weight: normal;
+    }
+
+    /* Cajas */
+    .caja {
+      background: white;
+      padding: 1em;
+      border-radius: 8px;
+    }
+
+       h2 {
+      margin: 0;
+      padding: 0;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    p {
+      font-family:  "Claris","Georgia", serif;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      font-size: 1.2em;
+      text-indent:1.4em;
+    }
+
+    p .detalles {
+      font-family: "Arial", sans-serif;
+      line-height: 0.9em;
+      margin: 0px;
+      font-size: 0.9em;
+      color: gray;
+    }
+
+
+   .list-group {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 0.25rem;
+      overflow: hidden; /* ensures rounding appears correctly */
+      border: 1px solid #ddd;
+    }
+
+    .list-group-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background-color: #fff;
+      border-bottom: 1px solid #ddd;
+      font-family: sans-serif;
+      font-size: 1rem;
+    }
+
+    /* Remove border from last item */
+    .list-group-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Rounded corners for first and last */
+    .list-group-item:first-child {
+      border-top-left-radius: 0.25rem;
+      border-top-right-radius: 0.25rem;
+    }
+
+    .list-group-item:last-child {
+      border-bottom-left-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
+    }
+
+    /* Badge styles */
+    .badge {
+      display: inline-block;
+      padding: 0.35em 0.65em;
+      font-size: 0.75em;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+      background-color: #007bff;
+      white-space: nowrap;
+      vertical-align: baseline;
+      border-radius: 0.25rem;
+    }
+
+    .badge-pill {
+      border-radius: 10rem;
+      padding-left: 0.75em;
+      padding-right: 0.75em;
+    }
+
+    /* Optional: Hover effect */
+    .list-group-item:hover {
+      background-color: #f8f9fa;
+      cursor: pointer;
+    }
+
+    /* Container */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem; /* space between links */
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+/* Links */
+.pagination a {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  font-family: system-ui, sans-serif;
+  color: #333;
+  text-decoration: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover */
+.pagination a:hover {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+/* Active (current page) */
+.pagination .active a {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  cursor: default;
+}
+
+/* Disabled (prev/next when not available) */
+.pagination .disabled a {
+  color: #aaa;
+  border-color: #eee;
+  pointer-events: none;
+  background: #fafafa;
+}
+
+
+   nav {
+      overflow-x: auto;   /* allows horizontal scroll */
+      white-space: nowrap; /* prevents wrapping */
+      background: white;
+      padding: 15px;
+
+    }
+
+    ul.menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: inline-block; /* keeps the list inline */
+    }
+
+    ul.menu li {
+      display: inline-block; /* inline items */
+      margin-right: 1.2rem;
+    }
+
+    ul.menu li a {
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+    }
+
+    ul.menu li a:hover {
+      background: gray;
+      color: #fff;
+    }
+
+    /* Optional: hide scrollbar in Webkit browsers */
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+    nav {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;     /* Firefox */
+    }
+
+
+
+
+
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="single-panel">
+  <br>
+  <form method="POST">
+    {% csrf_token %}
+     <input type="text" name="titulo" class="responsive-text">
+    <textarea name="contenido" class="responsive-textarea"></textarea>
+  <br>
+<input type="text" name="orden" value='0'> 
+
+<select name='tipo'>
+<option value='subitem'>subitem</option>
+<option value='character'>character</option>
+<option value='place'>place</option>
+<option value='event'>event</option>
+<option value='organization'>organization</option>
+</select><br>
+
+<input type="submit" name="guardar" value="Save">
+
+  </form>
+
+
+</div>
+
+
+</div>
+
+
+
+
+</body>
+</html>

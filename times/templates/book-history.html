@@ -1,0 +1,39 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Home {% endblock %}
+
+{% block izquierda %}
+
+  {% if item_queue %}
+
+  <h3>Read Books ({{nbooks}})</h3>
+  <ul class="styled-list">
+
+  {% for i in item_queue %}
+    <li>
+      <span class="main-item"><a href="{% url 'item' i.item.id %}" style="text-decoration:none; color:black;">{{i.item.titulo}}{{i.item.periodo}} </a></span>
+      <small class="sub-item">{{i.fec_fin|date:"M j, Y"}} | {{i.item.authors}}</small>
+    </li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <h3 style="color:red;">No Item in  Progress</h3>
+  {% endif %}
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<ul class="list-group">
+  {% for c in cats %}
+    <li class="list-group-item">
+      <a href="{% url 'categoria' c.id %}" style="text-decoration:none;">{{ c.nom_categoria|title }}</a>
+      <span class="badge badge-pill">{{ c.total_items }}</span>
+    </li>
+  {% endfor %}
+  
+</ul>
+{% endblock %}

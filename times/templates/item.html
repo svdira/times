@@ -1,0 +1,180 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %} {{this_item.titulo}} | The Times {% endblock %}
+
+{% block izquierda %}
+
+<h2><a href="{% url 'editItem' this_item.id %}" style="text-decoration:none; color: orange;">{{this_item.titulo}}{{this_item.periodo}}</a> {% if this_item.consumos > 0 %}&#9989;{%endif%}</h2>
+
+{% if inprogress %}
+<br>
+{% for c in inprogress %}
+
+<form method="post" class="times-form" action="{% url 'finishConsumo' %}">
+  {% csrf_token %}
+  <div class="form-group">
+    <label for="datepicker">Fec Fin</label>
+    <input type="text" id="datepicker" name="fec_fin" placeholder="Seleccionar fecha...">
+  </div>
+  <input type="hidden" name="con_id" value="{{c.id}}">
+  <button type="submit" class="btn-submit">Finish Consumo</button>
+</form>
+
+{% endfor %}
+{% endif %}
+
+<p>
+  <span class="detalles">
+    {{ this_item.tipo.nom_categoria|title }} | 
+    <a href="{% url 'addSeccion' this_item.id %}" style="text-decoration:none; color:grey;">Add Seccion</a> | 
+    <a href="#" onclick="document.getElementById('attrModal').showModal(); return false;" style="text-decoration:none; color:grey;">Add Attribute</a>
+    {% if aplica_consumo == 1 %} | <a href="{% url 'startConsumo' this_item.id %}" style="text-decoration:none; color:grey;">Start</a> {% endif %}
+  </span>
+</p>
+
+{% if this_item.get_attributes_list %}
+<div class="tech-details">
+  <div class="tech-title">{{ this_item.titulo }}</div>
+  <dl>
+    {% for attr in this_item.get_attributes_list %}
+      <dt>{{ attr.name|title }}</dt>
+      <dd>{{ attr.value }}</dd>
+    {% empty %}
+      <dd>No hay atributos registrados.</dd>
+    {% endfor %}
+  </dl>
+</div>
+{% endif %}
+
+{{this_item.preview|linebreaks}}
+
+{%if tags%}
+  <p>
+  {% for t in tags %}
+    <a href="{% url 'tag' t.tag %}"><span class="badge badge-pill" style="font-family: Arial, Helvetiva, sans-serif !important;">{{t.tag}}</span></a>
+  {% endfor%}
+  </p>
+{% endif %}
+
+<div style="clear:both;"></div>
+
+{% if this_item.members %}
+  <h3>Children Items</h3>
+  <ul class="styled-list">
+  {% for i in this_item.members %}
+    <li>
+      <span class="main-item"><a href="{% url 'item' i.id %}" style="text-decoration:none; color:black;">{{i.titulo}} </a>{% if i.consumos > 0 %}&#9989;{%endif%}</span>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
+{% if this_item.secciones %}{% if nsecciones < 11  %}{% for s in this_item.secciones %}<h2><a href="/edit-seccion/{{s.id}}?mode=edit}" style="text-decoration:none; color: orange;">{{s.titulo}}</a></h2>{{s.mdOutput|safe}}
+  {% endfor %}
+
+{% else  %}
+
+<ul class="styled-list" >
+  {% for s in this_item.secciones %}    
+<li>
+	<span class="main-item"><a href="/edit-seccion/{{s.id}}?mode=view" style="text-decoration:none;">{{s.titulo}}</a></span>
+</li>
+  {% endfor %}
+
+</ul>
+
+{% endif  %}
+{% endif %}
+
+<!-- HTML5 Native Modal -->
+<dialog id="attrModal" style="border:1px solid #ccc; border-radius:8px; padding:0; width:90%; max-width:450px;">
+  <div style="padding: 1.5rem; background:#fff;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h3 style="margin:0; font-family:'ArchivoNarrow', sans-serif;">Agregar Atributo</h3>
+      <button type="button" onclick="document.getElementById('attrModal').close();" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <form method="post" action="{% url 'addAttribute' this_item.id %}" class="times-form" style="box-shadow:none; padding:0; border:none;">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="id_tipo">Tipo</label>
+        <select name="tipo" id="id_tipo" onchange="updateValueInputType(this.value)">
+          <option value="text">Text</option>
+          <option value="date">Date</option>
+          <option value="integer">Integer</option>
+          <option value="decimal">Decimal</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="id_orden">Orden</label>
+        <input type="number" name="orden" id="id_orden" value="1" required>
+      </div>
+
+      <div class="form-group">
+        <label for="id_att_name">Nombre Atributo</label>
+        <input type="text" name="att_name" id="id_att_name" placeholder="Ej. paginas, idioma..." required>
+      </div>
+
+      <div class="form-group">
+        <label for="id_att_value">Valor</label>
+        <input type="text" name="att_value" id="id_att_value" required>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+        <button type="button" class="btn-submit" style="background:#888;" onclick="document.getElementById('attrModal').close();">Cancelar</button>
+        <button type="submit" class="btn-submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+  let attrFlatpickr = null;
+
+  function updateValueInputType(selectedType) {
+    const valInput = document.getElementById('id_att_value');
+
+    // Remove any leftover flatpickr instance and reset input state
+    if (attrFlatpickr) {
+      attrFlatpickr.destroy();
+      attrFlatpickr = null;
+    }
+    
+    // Ensure the input is writable by default when switching types
+    valInput.removeAttribute('readonly');
+    valInput.value = '';
+
+    if (selectedType === 'date') {
+      valInput.type = 'text';
+      attrFlatpickr = flatpickr(valInput, {
+        dateFormat: "Y-m-d",
+        allowInput: true,  // Keeps typing/manual entry enabled
+        clickOpens: true   // Opens the picker on click or focus
+      });
+    } else if (selectedType === 'integer') {
+      valInput.type = 'number';
+      valInput.step = '1';
+    } else if (selectedType === 'decimal') {
+      valInput.type = 'number';
+      valInput.step = '0.01';
+    } else {
+      valInput.type = 'text';
+    }
+  }
+</script>
+
+{% endblock %}
+
+{% block derecha %}
+<ul class="list-group">
+  {% for c in cats %}
+    <li class="list-group-item">
+      <a href="{% url 'categoria' c.id %}" style="text-decoration:none;">{{ c.nom_categoria|title }}</a>
+      <span class="badge badge-pill">{{ c.total_items }}</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

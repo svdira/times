@@ -1,0 +1,56 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Home {% endblock %}
+
+{% block izquierda %}
+
+
+  {% if articles %}
+    {% for a in articles %}
+   
+      <h2><a href="{% url 'item' a.id %}" style="text-decoration:none; color:#007bff; ">{{a.titulo}}{{a.periodo}}</a> {% if a.consumos > 0 %}&#9989;{%endif%}</h2>
+      
+
+      <p><span class="detalles">{{a.tipo.nom_categoria|title}} | {{a.fecha_creacion|date:"F j, Y"}}</p>
+
+
+
+
+      <p>{{a.preview|truncatewords:50 }}</p>
+      <div style="clear:both;"></div>
+      <hr style="margin-bottom: 0.9em; margin-top: 0em;">
+    {% endfor %}
+  {% endif %}
+
+
+<ul class="pagination">
+
+   {% if articles.has_previous %}
+        <li><a href="?page={{ articles.previous_page_number }}">Previous</a></li>
+    {% endif %}
+
+    <li><a href="#">Page {{ articles.number }} of {{ articles.paginator.num_pages }}</a> </li>
+
+    {% if articles.has_next %}
+        <li><a href="?page={{ articles.next_page_number }}">Next</a></li>
+    {% endif %}
+
+</ul>
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<ul class="list-group">
+	{% for c in cats %}
+		<li class="list-group-item">
+			<a href="{% url 'categoria' c.id %}" style="text-decoration:none;">{{ c.nom_categoria|title }}</a>
+			<span class="badge badge-pill">{{ c.total_items }}</span>
+		</li>
+	{% endfor %}
+  
+</ul>
+{% endblock %}
