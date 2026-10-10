@@ -17,6 +17,8 @@ import locale
 from itertools import groupby
 from operator import itemgetter
 import os
+import requests
+import json
 
 def homepage(request):
 	page = request.GET.get('page', 1)
@@ -93,7 +95,7 @@ def addAttrs(request,item):
 def item(request,item):
 	this_item = Item.objects.get(pk=int(item))
 	inprogress = Consumo.objects.filter(item=this_item,fec_ini__isnull=False,fec_fin__isnull=True)
-	aplica_consumo = 1 if this_item.tipo.nom_categoria in ['book','bunko','manga volume','comic book','magazine issue','anime season','show season','TV miniseries'] else 0
+	aplica_consumo = 1 if this_item.tipo.nom_categoria in ['book','bunko','movie','manga volume','comic book','magazine issue','anime season','show season','TV miniseries'] else 0
 	tags = ItemTag.objects.filter(item=this_item)
 	nsecciones = len(this_item.secciones) if this_item.secciones else 0
 	return render(request,'item.html',{'this_item':this_item,'tags':tags,'aplica_consumo':aplica_consumo,'inprogress':inprogress,'nsecciones':nsecciones})
@@ -162,6 +164,8 @@ def startConsumo(request,item):
 			newC = Consumo.objects.create(item=this_item,fec_ini=fec_ini,fec_fin=fec_fin)
 			this_item.fecha_creacion = fec_fin
 			this_item.save()
+		elif this_item.tipo.nom_categoria == 'movie':
+			newC = Consumo.objects.create(item=this_item,fec_ini=fec_ini,fec_fin=fec_ini)
 		else:
 			newC = Consumo.objects.create(item=this_item,fec_ini=fec_ini)
 
@@ -202,3 +206,46 @@ def add_attribute(request, item_id):
         if form.is_valid():
             form.save(item=item)
     return redirect('item', item=item.id)
+
+def addMovie(request):
+	if request.method == 'POST':
+		movie_id = request.POST.get("code")
+		url = "https://api.themoviedb.org/3/movie/{}?language=en-US".format(movie_id)
+		headers = {
+			"accept": "application/json",
+			"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0NmM4MjVlMDFiY2RiMWQ1NWQ4YjRmYzNiNDQ0ODFhZiIsInN1YiI6IjYwMWM1NmFkNzMxNGExMDAzZGZjMzhiOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.vnpzsejhhlKDqssAg1dHiMH64Ja4_bP2UPcJFgHrW3k"
+		}
+
+		response = requests.get(url, headers=headers)
+		movie_dict = json.loads(response.text)
+		str_titulo = movie_dict['original_title']
+		str_overview = movie_dict['overview']
+		str_premiere = movie_dict['release_date']
+		str_runtime= movie_dict['runtime']
+		categoria = Categoria.objects.get(pk=2)
+		newI = newI = Item.objects.create(titulo = str_titulo, fecha_creacion =  str_premiere, tipo =categoria, preview=str_overview)
+		newI.save()
+		newT = AttrDate.objects.create(item=newI,orden=1,att_name='premiere',att_value=str_premiere)
+		newT.save()
+
+
+
+		url = "https://api.themoviedb.org/3/movie/{}/credits?language=en-US".format(movie_id)
+	
+
+		response = requests.get(url, headers=headers)
+		movie_dict_2 = json.loads(response.text)
+		for c in movie_dict_2['crew']:
+			if c['job']=='Director':
+				newT = AttrText.objects.create(item=newI,orden=2,att_name='director',att_value=c['original_name'])
+				newT.save()
+
+		for c in movie_dict_2['cast'][0:25]:
+			newt = ItemTag.objects.create(item=newI,tag=c['original_name'])
+			newt.save()
+		
+		return redirect("item",item=newI.id)
+				
+
+
+	return render(request,'add-movie.html',{})

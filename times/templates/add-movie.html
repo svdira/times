@@ -1,0 +1,39 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Add Entrada{% endblock %}
+
+{% block izquierda %}
+<form method="post" class="times-form">
+  {% csrf_token %}
+  
+  <div class="form-group">
+    <label for="titulo">Movie Code</label>
+    <input type="text" id="code" name="code"  required>
+  </div>
+
+
+  <button type="submit" class="btn-submit">Add Movie</button>
+</form>
+
+<!-- Option B: If using a Django Form object (form.as_p) -->
+<!-- 
+<form method="post" class="times-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn-submit">Guardar</button>
+</form>
+-->
+{% endblock %}
+
+{% block derecha %}
+<ul class="list-group">
+  {% for c in cats %}
+    <li class="list-group-item">
+      <a href="{% url 'categoria' c.id %}" style="text-decoration:none;">{{ c.nom_categoria|title }}</a>
+      <span class="badge badge-pill">{{ c.total_items }}</span>
+    </li>
+  {% endfor %}
+  
+</ul>
+{% endblock %}
