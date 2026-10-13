@@ -774,7 +774,9 @@ width: 100%;}
     <div class="fecha">
       {% block cinta %}
       <a href="{% url 'addItem' %}" style="text-decoration:none; color:grey;">Add</a> | 
-      <a href="{% url 'itemInProgress' %}" style="text-decoration:none; color:grey;">InProgress</a> | 
+  <a href="{% url 'addMovie' %}" style="text-decoration:none; color:grey;">Add Movie</a> | 
+        
+  <a href="{% url 'itemInProgress' %}" style="text-decoration:none; color:grey;">InProgress</a> | 
       <a href="{% url 'bookHistory' %}" style="text-decoration:none; color:grey;">Book History</a> | 
       <a href="{% url 'bookQueue' %}" style="text-decoration:none; color:grey;">Book Queue</a>{% endblock %} 
 

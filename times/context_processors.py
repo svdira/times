@@ -3,7 +3,7 @@ from .models import Categoria
 
 def categories_processor(request):
     # Define your custom priority order for 'nom_categoria'
-    tipo_priority = ['tv series', 'TV miniseries', 'bunko series', 'manga series','movie']
+    tipo_priority = ['book','tv series', 'TV miniseries', 'bunko series', 'manga series','movie']
     
     # Build the Case/When statement dynamically using nom_categoria
     custom_tipo_order = Case(
