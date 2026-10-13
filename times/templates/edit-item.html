@@ -299,7 +299,7 @@
   <form method="POST">
     {% csrf_token %}
      <input type="text" name="titulo" value="{{this_item.titulo}}" class="responsive-text">
-     <input type="text" name="children" value="{{children}}" class="responsive-text">
+     <input type="text" name="parent" value="{{parent}}" class="responsive-text">
     <textarea name="contenido" class="responsive-textarea">{{this_item.preview}}</textarea>
      <input type="text" name="tags"  class="responsive-text">
     

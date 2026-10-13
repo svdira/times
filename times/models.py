@@ -97,11 +97,13 @@ class Item(models.Model):
         import ast
 
         # Fetch the latest attribute entry in a single SQL query
-        atts = AttrText.objects.filter(item=self, att_name='children_items').order_by('-id').first()
+        item_ids = list(AttrInteger.objects.filter(att_name='parent', att_value=self.id)
+        .order_by('id')
+        .values_list('item__id', flat=True)
+        )
 
-        if atts:
+        if item_ids:
             try:
-                item_ids = ast.literal_eval(atts.att_value)
                 if isinstance(item_ids, (list, tuple, set)):
                     return Item.objects.filter(id__in=item_ids)
             except (ValueError, SyntaxError):

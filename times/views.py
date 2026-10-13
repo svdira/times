@@ -127,23 +127,23 @@ def editSeccion(request,seccion):
 
 def editItem(request,item):
 	this_item = Item.objects.get(pk=int(item))
-	this_children = None
-	children = ''
+	parent = None
+	parent_id = 0
 
-	if AttrText.objects.filter(item=this_item,att_name='children_items'):
-		this_children = AttrText.objects.filter(item=this_item,att_name='children_items').latest('id')
-		children = this_children.att_value
+	if AttrInteger.objects.filter(item=this_item,att_name='parent'):
+		parent = AttrInteger.objects.filter(item=this_item,att_name='parent').latest('id')
+		parent_id = parent.id
 
 	if request.method == 'POST':
 		this_item.titulo = request.POST.get("titulo")
 		this_item.preview = request.POST.get("contenido")
 		this_item.save()
-		if this_children:
-			this_children.att_value = request.POST.get("children")
-			this_children.save()
+		if parent_id > 0:
+			parent.att_value = int(request.POST.get("parent"))
+			parent.save()
 
-		if this_children == None and len(request.POST.get("children"))>1:
-			newT = AttrText.objects.create(item=this_item,att_name='children_items',orden=9999,att_value=request.POST.get("children"))
+		if parent is None and len(request.POST.get("parent"))>1:
+			newT = AttrInteger.objects.create(item=this_item,att_name='parent',orden=9999,att_value=int(request.POST.get("parent")))
 			newT.save()
 
 		if request.POST.get("tags"):
@@ -152,7 +152,7 @@ def editItem(request,item):
 				newt.save()
 
 		return redirect('item',item=this_item.id)
-	return render(request,'edit-item.html',{'this_item':this_item,'children':children})
+	return render(request,'edit-item.html',{'this_item':this_item,'parent':parent_id})
 
 def startConsumo(request,item):
 	this_item = Item.objects.get(pk=int(item))
