@@ -153,7 +153,7 @@
       font-family:  "Claris","Georgia", serif;
       line-height: 1.5;
       margin-bottom: 14px;
-      font-size: 1.2em;
+      font-size: 1.05em;
       }
 
     p .detalles {
@@ -351,10 +351,10 @@
 
       p {
         font-family:  "Claris","Georgia", serif;
-        line-height: 1.6;
+        line-height: 1.5;
         margin-bottom: 14px;
         font-size: 1.2em;
-     
+
         }
 
 
@@ -656,7 +656,7 @@ width: 100%;}
     aspect-ratio: 3 / 4;
     object-fit: cover;
     border-radius: 10px;
-    border: 1px solid #dcdfe3; 
+    border: 1px solid #dcdfe3;
 }
 
 /* Texto debajo */
@@ -760,6 +760,17 @@ width: 100%;}
   transform: scale(0.98);
 }
 
+
+/* By default, hide the mobile image and show the desktop image */
+.img-mobile { display: none; }
+.img-desktop { display: block; }
+
+/* On mobile screens (e.g., width 768px and down), swap them */
+@media (max-width: 768px) {
+    .img-mobile { display: block; width: 40%; max-width: 200px; float: left;  margin-top: 0.4em; margin-left: 0em; margin-right: 0.9em; margin-bottom: 0.3em; border: 1px solid gray; }
+    .img-desktop { display: none; }
+}
+
   </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -773,12 +784,13 @@ width: 100%;}
     <!-- Fecha centrada -->
     <div class="fecha">
       {% block cinta %}
-      <a href="{% url 'addItem' %}" style="text-decoration:none; color:grey;">Add</a> | 
-  <a href="{% url 'addMovie' %}" style="text-decoration:none; color:grey;">Add Movie</a> | 
-        
-  <a href="{% url 'itemInProgress' %}" style="text-decoration:none; color:grey;">InProgress</a> | 
-      <a href="{% url 'bookHistory' %}" style="text-decoration:none; color:grey;">Book History</a> | 
-      <a href="{% url 'bookQueue' %}" style="text-decoration:none; color:grey;">Book Queue</a>{% endblock %} 
+      <a href="{% url 'addItem' %}" style="text-decoration:none; color:grey;">Add</a> |
+  <a href="{% url 'addMovie' %}" style="text-decoration:none; color:grey;">+Movie</a> |
+
+  <a href="{% url 'itemInProgress' %}" style="text-decoration:none; color:grey;">Now</a> |
+      <a href="{% url 'bookHistory' %}" style="text-decoration:none; color:grey;">History</a> |
+      <a href="{% url 'bookQueue' %}" style="text-decoration:none; color:grey;">Queue</a> |
+      <a href="{% url 'futbol' 0 %}" style="text-decoration:none; color:grey;">Futbol</a> {% endblock %}
 
     </div>
 

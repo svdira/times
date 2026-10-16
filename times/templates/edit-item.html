@@ -296,15 +296,20 @@
 
 <div class="single-panel">
   <br>
-  <form method="POST">
+<form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
-     <input type="text" name="titulo" value="{{this_item.titulo}}" class="responsive-text">
-     <input type="text" name="parent" value="{{parent}}" class="responsive-text">
+    <input type="text" name="titulo" value="{{this_item.titulo}}" class="responsive-text">
+    <input type="text" name="parent" value="{{parent}}" class="responsive-text">
     <textarea name="contenido" class="responsive-textarea">{{this_item.preview}}</textarea>
-     <input type="text" name="tags"  class="responsive-text">
-    
-  <br><input type="submit" name="guardar" value="Save">
+    <input type="text" name="tags" class="responsive-text">
 
+
+    <div style="margin-bottom: 1.5em;">
+      <label for="imagen" class="detalles">Subir</label><br>
+      <input type="file" id="imagen" name="imagen" accept="image/*">
+    </div>
+
+    <input type="submit" name="guardar" value="Save">
   </form>
 
 

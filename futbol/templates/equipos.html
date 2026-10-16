@@ -1,0 +1,59 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}Add teams to {{this_liga.nombre}}{% endblock %}
+
+{% block izquierda %}
+
+
+<h2><a href="{% url 'futbol' 1 %}">Coming Matches</a> | <a href="{% url 'futbol' 1 %}">Finished</a> |Teams</h2><br>
+
+
+
+
+
+<ul class="styled-list">
+
+  <li>
+      <span class="main-item"><a href="{% url 'equipo' 1 %}" style="text-decoration:none; color:black;">Barcelona @ Spain</a></span>
+   
+    </li>
+
+    
+  <li>
+      <span class="main-item"><a href="{% url 'equipo' 2 %}" style="text-decoration:none; color:black;">Liverpool @ England</a></span>
+   
+    </li>
+
+  {% for i in equipos %}
+    <li>
+      <span class="main-item"><a href="{% url 'equipo' i.id %}" style="text-decoration:none; color:black;">{{i.nombre}} @ {{i.pais}}</a></span>
+   
+    </li>
+  {% endfor %}
+  </ul>
+
+
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+
+
+{% endblock %}

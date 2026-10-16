@@ -1,0 +1,91 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}Contrato{% endblock %}
+
+{% block izquierda %}
+
+<h2>{{this_contrato.jugador.nombre}} @ <a href="{% url 'nomina' this_contrato.equipo.id %}">{{this_contrato.equipo.nombre}}</a></h2>
+
+
+
+
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+{% if this_contrato.jugador.mainPic %}
+<div style="width: 100%; text-align: center;" >
+<img src="{{this_contrato.jugador.mainPic.imagen.url}}" style="width: 100%; max-width: 200px; border: 1px grey solid;">
+</div>
+{% endif %}
+
+  <br>
+
+<form method="POST" action="{% url 'addprofilepicture' this_contrato.id %}" enctype="multipart/form-data">
+ {% csrf_token %}
+
+ <label>Add Profile Picture </label><br>
+   <input type="file" name="imagen" accept="image/*" style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  
+  <input type="submit" value="Add Contrato">
+
+  
+</form>
+
+<form method="POST">
+  {% csrf_token %}
+  
+  <label>Nombre Jugador:</label><br>
+  <input type="text" name="nombre" value="{{this_jugador.nombre}}" style="width:100%; padding-top:0.5em;padding-bottom:0.5em;" disabled>
+  <br><br>
+  <label>Pais Origen:</label><br>
+  <input type="text" name="pais" value="{{this_jugador.pais}}" style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  <label>Info:</label><br>
+  <textarea name="info" rows='3' style="width:95%; padding: 0.8em; font-size: 1.1em; line-height: 1.5em; font-family: 'Calibri','Arial', sans-serif;">{{this_jugador.info}}</textarea>
+  <br><br>
+
+  <label>Fecha Inicio:</label><br>
+  <input type="text" name="fec_ini" value='{{this_contrato.fec_ini|date:"Y-m-d"}}' style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  <label>Fecha Fin:</label><br>
+  <input type="text" name="fec_fin" style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  <label>Posicion:</label><br>
+  <select name="posicion" style="padding-top:0.5em;padding-bottom:0.5em;">
+    <option value="delantero" {% if this_contrato.posicion == 'delantero' %}selected{% endif%}>Delantero</option>
+    <option value="centrocampista" {% if this_contrato.posicion == 'centrocampista' %}selected{% endif%}>Centrocampista</option>
+    <option value="defensa" {% if this_contrato.posicion == 'defensa' %}selected{% endif%}>Defensa</option>
+    <option value="arquero" {% if this_contrato.posicion == 'arquero' %}selected{% endif%}>Arquero</option>
+    <option value="TBA" {% if this_contrato.posicion == 'TBA' %}selected{% endif%}>TBA</option>
+    <option value="dt" {% if this_contrato.posicion == 'dt' %}selected{% endif%}>DT</option>
+
+  </select>
+  <br><br>
+
+  <label>Dorsal:</label><br>
+  <input type="text" name="dorsal" value = "{{this_contrato.dorsal}}" style=" padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+
+
+
+
+  <input type="submit" value="Save Changes">
+
+
+</form>
+
+
+
+{% endblock %}

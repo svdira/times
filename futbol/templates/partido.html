@@ -1,0 +1,204 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}{{this_partido.headline}}{% endblock %}
+
+{% block izquierda %}
+
+
+
+
+
+
+
+
+
+
+{% if this_partido.terminado == False %}
+
+<h2>{{this_partido.headline}} @ <a href="{% url 'liga' this_partido.torneo.id  %}" style="text-decoration: none; color:blue;">{{this_partido.torneo.nombre}}</a> | {{this_partido.fecha}} | <a href="{% url 'editMatch' this_partido.id  %}" style="text-decoration: none; color:grey;">Edit</a></h2>
+
+<form method="POST">
+  {% csrf_token %}
+  <table style="margin: 0 auto;">
+    <tr>
+      <td>{{this_partido.local.nombre}}</td>
+      <td><input type="text" name="marcador" style="width:6em; text-align: center; padding-top:0.5em;padding-bottom:0.5em;"></td>
+
+      <td>{{this_partido.visita.nombre}}</td>
+
+    </tr>
+    <tr>
+      <td colspan="3" style="text-align: center;"><input type="submit" value="Save"></td>
+    </tr>
+  </table>
+</form>
+{% else %}
+
+<div class="match-card">
+  <div class="match-meta">
+    <span class="match-date">{{this_partido.fecha}}</span>
+    <span class="match-league"><a href="{% url 'liga' this_partido.torneo.id %}" style="text-decoration:none; color:blue;">{{this_partido.torneo.nombre}}</a></span>
+  </div>
+
+  <div class="match-body">
+    <div class="team home">
+      <span class="team-name">{{this_partido.local.nombre}}</span>
+    </div>
+
+    <div class="score">
+      <span class="goals">{{this_partido.goles_local}}{% if this_partido.rondap_local %}&nbsp;({{this_partido.rondap_local}}{% endif %}</span>
+      <span class="divider">–</span>
+      <span class="goals">{% if this_partido.rondap_visita%}{{this_partido.rondap_visita}})&nbsp;{% endif %}{{this_partido.goles_visita}}</span>
+    </div>
+
+    <div class="team away">
+      <span class="team-name">{{this_partido.visita.nombre}}</span>
+    </div>
+  </div>
+</div>
+
+{% if goles %}
+<br>
+<div style = "width:100%; position:relative;">
+
+    <div style = "width:48%; position:relative; margin-left: 3%; float:left;">
+        {% for g in goles %}
+        {% if this_partido.local.nombre == g.contrato.equipo.nombre or g.gol_local == 1 %}
+         {{g.contrato.jugador.nombre}} {{g.minuto}}'{% if g.adicional > 0%}+{{g.adicional}}{%endif%}{% if g.penalty == True %} P{%endif%}<br>
+         {% endif %}
+        {% endfor %}
+
+    </div>
+    <div style = "width:48%; position:relative; float:right; text-align:right;">
+        {% for g in goles %}
+        {% if this_partido.visita.nombre == g.contrato.equipo.nombre or g.gol_local == 0 %}
+         {{g.contrato.jugador.nombre}} {{g.minuto}}'{% if g.adicional > 0%}+{{g.adicional}}{%endif%}{% if g.penalty == True %} P{%endif%}<br>
+         {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<br>
+
+{% endif %}
+
+
+<div style = "width:100%; position:relative;">
+
+    <div style = "width:48%; position:relative; margin-left: 3%; float:left;">
+   {% if contratos_l and this_partido.goles_local > 0 and this_partido.goles_local > this_partido.gl %}
+
+
+  <h3>Local Goals</h3>
+    <form method='POST' action="{% url 'regGol' %}">
+       {% csrf_token %}
+       <select name="contrato" style="padding-top:0.5em;padding-bottom:0.5em;">
+        {%for c in contratos_l%}
+         <option value="{{c.id}}">{{c.jugador.nombre}}</option>
+        {% endfor %}
+       </select><br>
+        <input type="text" name="goal_str" style="padding-top:0.5em;padding-bottom:0.5em; width:90%;">
+        <input type="submit" value="save" style="padding-top:0.5em;padding-bottom:0.5em;"><br>
+       <input type="hidden" name="tipo" value="local">
+       <input type="hidden" name="partido" value="{{this_partido.id}}">
+    </form>
+
+  {% endif %}
+
+  </div>
+
+ <div style = "width:48%; position:relative; float:right;">
+  {% if contratos_v and this_partido.goles_visita > 0 and this_partido.goles_visita > this_partido.gv %}
+  <h3>Visit Goals</h3>
+    <form method='POST' action="{% url 'regGol' %}">
+       {% csrf_token %}
+       <select name="contrato" style="padding-top:0.5em;padding-bottom:0.5em;">
+        {%for c in contratos_v%}
+         <option value="{{c.id}}">{{c.jugador.nombre}}</option>
+        {% endfor %}
+       </select>
+       <br><input type="text" name="goal_str" style="padding-top:0.5em;padding-bottom:0.5em; width:90%;">
+      <br><input type="submit" value="save" style="padding-top:0.5em;padding-bottom:0.5em;">
+       <input type="hidden" name="tipo" value="visita">
+       <input type="hidden" name="partido" value="{{this_partido.id}}">
+    </form>
+  {% endif %}
+  </div>
+  </div>
+{% endif %}
+
+<div style="clear:both;"></div>
+
+
+
+<p><span class="detalles">LineUps: <a href="{% url 'alineacion' this_partido.id this_partido.local.id %}"  style="text-decoration:none; color:grey;">{{this_partido.local.nombre}}</a> | <a href="{% url 'alineacion' this_partido.id this_partido.visita.id %}"  style="text-decoration:none; color:grey;">{{this_partido.visita.nombre}} </a> || <a href="{% url 'addnotapartido' this_partido.id  %}"  style="text-decoration:none; color:grey;">Comentar</a> | <a href="{% url 'matchreport' this_partido.id  %}" target="_blank" style="text-decoration:none; color:grey;">Report</a></span></p>
+
+
+{% if comms %}
+<hr>
+<p style="text-indent: 0; !important">
+  {% for c in comms %}
+    {% if c.minuto > 0 and c.minuto < 121 %}{{c.minuto}}' | {% endif %}{{c.comentario}}<br>
+  {% endfor %}
+  </p>
+  <hr>
+{% endif %}
+
+
+
+{% if next_m %}
+<br>
+
+      <h3>More Matches</h3>
+
+  {% for p in next_m %}
+   <a href="{% url 'partido' p.id %}" style="text-decoration:none;">
+        <div class="match-card">
+          <div class="match-meta">
+            <span class="match-date">{{p.fecha}}</span>
+            <span class="match-league">{{p.fase}}</span>
+          </div>
+
+          <div class="match-body">
+            <div class="team home">
+              <span class="team-name">{{p.local.nombre}}</span>
+            </div>
+
+            <div class="score">
+              <span class="goals">&nbsp;&nbsp;</span>
+              <span class="divider">–</span>
+              <span class="goals">&nbsp;&nbsp;</span>
+            </div>
+
+            <div class="team away">
+              <span class="team-name">{{p.visita.nombre}}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+        <br>
+  {% endfor %}
+
+{% endif %}
+
+
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+{% endblock %}

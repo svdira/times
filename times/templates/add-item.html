@@ -4,9 +4,14 @@
 {% block titulo %}The Times | Add Entrada{% endblock %}
 
 {% block izquierda %}
-<form method="post" class="times-form">
+
+{% if this_parent %}
+    <h2>Add child to {{this_parent.titulo}}</h2>
+{% endif %}
+
+<form method="post" class="times-form" enctype="multipart/form-data">
   {% csrf_token %}
-  
+
   <div class="form-group">
     <label for="titulo">Título</label>
     <input type="text" id="titulo" name="titulo"  required>
@@ -25,7 +30,7 @@
       {% for c in all_cats %}
     		<option value="{{c.id}}">{{c.nom_categoria|title}}</option>
     	{% endfor %}
-   
+
     </select>
   </div>
 
@@ -39,12 +44,17 @@
     <input type="text" id="tags" name="tags"  >
   </div>
 
+  <div class="form-group">
+    <label for="imagen">Cover</label>
+    <input type="file" id="imagen" name="imagen" accept="image/*">
+  </div>
+
 
   <button type="submit" class="btn-submit">Publicar Entrada</button>
 </form>
 
 <!-- Option B: If using a Django Form object (form.as_p) -->
-<!-- 
+<!--
 <form method="post" class="times-form">
   {% csrf_token %}
   {{ form.as_p }}
@@ -61,6 +71,6 @@
       <span class="badge badge-pill">{{ c.total_items }}</span>
     </li>
   {% endfor %}
-  
+
 </ul>
 {% endblock %}

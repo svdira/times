@@ -8,6 +8,10 @@ from django.db.models import Q, Avg, Count, Min, Sum
 from random import choice
 import markdown
 from itertools import chain
+from io import BytesIO
+from PIL import Image
+from django.core.files.base import ContentFile
+from uuid import uuid4
 
 class Categoria(models.Model):
     nom_categoria = models.CharField(max_length=255)
@@ -59,8 +63,10 @@ class Item(models.Model):
             return ''
         elif ini != '' and fin == '':
             return f" ({ini})"
-        elif ini != '' and fin != '':
+        elif ini != '' and fin != '' and ini != fin:
             return f" ({ini}-{fin})"
+        elif ini != '' and fin != '' and ini == fin:
+            return f" ({fin})"
         else:
             return ''
 
@@ -94,7 +100,6 @@ class Item(models.Model):
 
     @property
     def members(self):
-        import ast
 
         # Fetch the latest attribute entry in a single SQL query
         item_ids = list(AttrInteger.objects.filter(att_name='parent', att_value=self.id)
@@ -113,6 +118,14 @@ class Item(models.Model):
 
     def __str__(self):
         return self.titulo
+
+    @property
+    def cover_image(self):
+        # Obtiene todas las imágenes asociadas al item
+        imagenes = list(self.attrimage_set.all())
+        if imagenes:
+            return choice(imagenes)
+        return None
 
 
 class Seccion(models.Model):
@@ -182,3 +195,51 @@ class ItemTag(models.Model):
 
     def __str__(self):
         return self.tag + ' @ ' + self.item.titulo
+
+
+
+
+
+class AttrImage(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    orden = models.IntegerField(default=1)
+    att_name = models.CharField(max_length=255, default='image')
+    imagen = models.ImageField(upload_to='attr_images/')
+
+    def save(self, *args, **kwargs):
+        # Solo procesa y renombra si es un archivo nuevo/subido (_committed es False)
+        if self.imagen and hasattr(self.imagen, 'file') and not getattr(self.imagen, '_committed', False):
+            try:
+                img = Image.open(self.imagen)
+
+                # Mantener transparencia para PNG o convertir a JPEG
+                if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                    formato = 'PNG'
+                    ext = '.png'
+                else:
+                    formato = 'JPEG'
+                    ext = '.jpg'
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+
+                # Redimensionar manteniendo proporción (máx 400x400)
+                img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+
+                buffer = BytesIO()
+                img.save(buffer, format=formato, quality=85, optimize=True)
+                buffer.seek(0)
+
+                # Código hexadecimal de 32 caracteres (ej: 4f1a8e2b9c3d4e5f6a7b8c9d0e1f2a3b.jpg)
+                hex_name = f"{uuid4().hex}{ext}"
+
+                # Si prefieres una longitud fija más corta (ej: 16 caracteres hex), puedes usar:
+                # hex_name = f"{uuid4().hex[:16]}{ext}"
+
+                self.imagen.save(hex_name, ContentFile(buffer.read()), save=False)
+            except Exception:
+                pass
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.att_name} @ {self.item.titulo}"

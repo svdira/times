@@ -2,13 +2,11 @@ from django.db.models import Count, Case, When, Value, IntegerField
 from .models import Categoria
 
 def categories_processor(request):
-    # Define your custom priority order for 'nom_categoria'
-    tipo_priority = ['book','tv series', 'TV miniseries', 'bunko series', 'manga series','movie']
-    
-    # Build the Case/When statement dynamically using nom_categoria
+    tipo_priority = ['book','movie','tv series', 'TV miniseries', 'bunko series', 'manga series']
+
     custom_tipo_order = Case(
         *[When(nom_categoria=t, then=Value(i)) for i, t in enumerate(tipo_priority)],
-        default=Value(len(tipo_priority)),  # Puts any unlisted categories at the very end
+        default=Value(len(tipo_priority)),
         output_field=IntegerField()
     )
 

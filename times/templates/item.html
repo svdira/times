@@ -26,23 +26,34 @@
 
 <p>
   <span class="detalles">
-    {{ this_item.tipo.nom_categoria|title }} | 
-    <a href="{% url 'addSeccion' this_item.id %}" style="text-decoration:none; color:grey;">Add Seccion</a> | 
-    <a href="#" onclick="document.getElementById('attrModal').showModal(); return false;" style="text-decoration:none; color:grey;">Add Attribute</a>
-    {% if aplica_consumo == 1 %} | <a href="{% url 'startConsumo' this_item.id %}" style="text-decoration:none; color:grey;">Start</a> {% endif %}
+    {{ this_item.tipo.nom_categoria|title }} |
+    <a href="{% url 'addSeccion' this_item.id %}" style="text-decoration:none; color:grey;">+Seccion</a> |
+    <a href="#" onclick="document.getElementById('attrModal').showModal(); return false;" style="text-decoration:none; color:grey;">+Attr</a>
+    {% if aplica_consumo == 1 %} | <a href="{% url 'startConsumo' this_item.id %}" style="text-decoration:none; color:grey;">Start</a>{% endif %} | <a href="/add-item/?parent={{this_item.id}}" style="text-decoration:none; color:grey;">+Child</a>
   </span>
 </p>
 
-{% if this_item.get_attributes_list %}
+{% if this_item.get_attributes_list or this_item.cover_image %}
 <div class="tech-details">
   <div class="tech-title">{{ this_item.titulo }}</div>
   <dl>
+      {% if this_item.cover_image %}
+            <img src="{{ this_item.cover_image.imagen.url }}" alt="{{ this_item.titulo }}" class="tech-image">
+        {% endif %}
+
+        {% if this_item.get_attributes_list %}
     {% for attr in this_item.get_attributes_list %}
       <dt>{{ attr.name|title }}</dt>
+      {% if attr.name == 'parent' %}
+      <dd><a href="{% url 'item' this_parent.id %}" style="text-decoration:none;">{{this_parent.titulo}}</a></dd>
+      {% else %}
       <dd>{{ attr.value }}</dd>
+      {% endif %}
     {% empty %}
       <dd>No hay atributos registrados.</dd>
     {% endfor %}
+
+    {% endif %}
   </dl>
 </div>
 {% endif %}
@@ -64,19 +75,19 @@
   <ul class="styled-list">
   {% for i in this_item.members %}
     <li>
-      <span class="main-item"><a href="{% url 'item' i.id %}" style="text-decoration:none; color:black;">{{i.titulo}} </a>{% if i.consumos > 0 %}&#9989;{%endif%}</span>
+      <span class="main-item"><a href="{% url 'item' i.id %}" style="text-decoration:none; color:black;">{{i.titulo}}{{i.periodo}}</a>{% if i.consumos > 0 %}&#9989;{%endif%}</span>
     </li>
   {% endfor %}
   </ul>
 {% endif %}
 
-{% if this_item.secciones %}{% if nsecciones < 11  %}{% for s in this_item.secciones %}<h2><a href="/edit-seccion/{{s.id}}?mode=edit}" style="text-decoration:none; color: orange;">{{s.titulo}}</a></h2>{{s.mdOutput|safe}}
+{% if this_item.secciones %}{% if nsecciones < 11  %}{% for s in this_item.secciones %}<h2><a href="/edit-seccion/{{s.id}}?mode=edit" style="text-decoration:none; color: orange;">{{s.titulo}}</a></h2>{{s.mdOutput|safe}}
   {% endfor %}
 
 {% else  %}
 
 <ul class="styled-list" >
-  {% for s in this_item.secciones %}    
+  {% for s in this_item.secciones %}
 <li>
 	<span class="main-item"><a href="/edit-seccion/{{s.id}}?mode=view" style="text-decoration:none;">{{s.titulo}}</a></span>
 </li>
@@ -97,7 +108,7 @@
 
     <form method="post" action="{% url 'addAttribute' this_item.id %}" class="times-form" style="box-shadow:none; padding:0; border:none;">
       {% csrf_token %}
-      
+
       <div class="form-group">
         <label for="id_tipo">Tipo</label>
         <select name="tipo" id="id_tipo" onchange="updateValueInputType(this.value)">
@@ -142,7 +153,7 @@
       attrFlatpickr.destroy();
       attrFlatpickr = null;
     }
-    
+
     // Ensure the input is writable by default when switching types
     valInput.removeAttribute('readonly');
     valInput.value = '';

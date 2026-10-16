@@ -7,6 +7,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('times.urls')),
+    path('futbol/',include('futbol.urls')),
 ]
 
 if settings.DEBUG:

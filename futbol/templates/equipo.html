@@ -1,0 +1,72 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}{{this_equipo.nombre}}'s Page{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>{{this_equipo.nombre}}'s Main Page | <a href="{% url 'nomina' this_equipo.id %}">Team</a></h2>
+
+
+
+{% if partidos %}
+
+<h3>Last {{stats.0}} Matches: {{stats.1}}W/{{stats.2}}D/{{stats.3}}L</h3>
+<p><span style="font-family:Arial,sans-serif;">{{vector_p|safe}}</span></p>
+<h3>Last Matches</h3>
+
+  {% for p in partidos %}
+   <a href="{% url 'partido' p.id %}" style="text-decoration:none;">
+  <div class="match-card">
+          <div class="match-meta">
+            <span class="match-date">{{p.fecha}}</span>
+            <span class="match-league">{{p.torneo.nombre}} ({{p.fase}})</span>
+          </div>
+
+          <div class="match-body">
+            <div class="team home">
+              <span class="team-name">{{p.local.nombre}}</span>
+            </div>
+
+            <div class="score">
+              <span class="goals">{{p.goles_local}}{% if p.rondap_local %}&nbsp;({{p.rondap_local}}{% endif %}</span>
+              <span class="divider">–</span>
+              <span class="goals">{% if p.rondap_visita%}{{p.rondap_visita}})&nbsp;{% endif %}{{p.goles_visita}}</span>
+            </div>
+
+
+            <div class="team away">
+              <span class="team-name">{{p.visita.nombre}}</span>
+            </div>
+          </div>
+        </div></a>
+        <br>
+  {% endfor %}
+{% endif %}
+
+
+
+{% endblock %}
+
+
+
+
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+
+{% endblock %}

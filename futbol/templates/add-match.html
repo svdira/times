@@ -1,0 +1,83 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}Add New MATCH{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>Add New Match to {{this_liga.nombre}}</h2>
+<br>
+
+<form method="POST">
+  {% csrf_token %}
+  <label>Date:</label><br>
+  <input type="text" name="fecha" value='{{up.fecha|date:"Y-m-d"}}'style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  <label>Phase:</label><br>
+  <input type="text" name="fase" value="{{up.fase}}" style="width:50%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+  <label>Local Team:</label><br>
+  <select name="local" style="padding-top:0.5em;padding-bottom:0.5em;">
+    {% for e in equipos %}
+      <option value="{{e.equipo.id}}">{{e.equipo.nombre}}</option>
+    {% endfor %}
+  </select>
+  <br><br>
+   <label>Visit Team:</label><br>
+  <select name="visit" style="padding-top:0.5em;padding-bottom:0.5em;">
+    {% for e in equipos %}
+      <option value="{{e.equipo.id}}">{{e.equipo.nombre}}</option>
+    {% endfor %}
+  </select>
+  <br><br>
+  
+  <input type="submit" value="Add Match">
+
+
+</form>
+
+
+{% if rp %}
+  <br>
+      <table>
+        <tr>
+          <th colspan="6" style="text-align: left;">Added Matches</th>
+        </tr>
+        {% for i in rp %}
+        <tr>
+          <td>{{i.fecha|date:"m/d"}}</td>
+          <td>{{i.local.nombre}}</td>
+          <td><a href="{% url 'partido' i.id %}">vs</a></td>
+          <td>{{i.visita.nombre}}</td>
+          <td>{{i.fase}}</td>
+        </tr>
+        {% endfor %}
+
+      </table>   <br> 
+
+  {% endif %}
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+    
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+      
+    {% endfor %}
+
+</ul>
+
+
+
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}{{this_partido.headline}}{% endblock %}
+
+{% block izquierda %}
+
+
+
+
+
+
+
+
+
+
+
+<div class="match-card">
+  <div class="match-meta">
+    <span class="match-date">{{this_partido.fecha}}</span>
+    <span class="match-league">{{this_partido.torneo.nombre}}</span>
+  </div>
+
+  <div class="match-body">
+    <div class="team home">
+      <span class="team-name">{{this_partido.local.nombre}}</span>
+    </div>
+
+    {% if this_partido.terminado == True %}
+    <div class="score">
+      <span class="goals">{{this_partido.goles_local}}{% if this_partido.rondap_local %}&nbsp;({{this_partido.rondap_local}}{% endif %}</span>
+      <span class="divider">–</span>
+      <span class="goals">{% if this_partido.rondap_visita%}{{this_partido.rondap_visita}})&nbsp;{% endif %}{{this_partido.goles_visita}}</span>
+    </div>
+
+    {% else %}
+
+    <div class="score">
+      <span class="goals">&nbsp;</span>
+      <span class="divider">–</span>
+      <span class="goals">&nbsp;</span>
+    </div>
+
+
+    {% endif %}
+
+    <div class="team away">
+      <span class="team-name">{{this_partido.visita.nombre}}</span>
+    </div>
+  </div>
+</div>
+
+<br>
+
+<h2>Add Comments</h2>
+<br>
+
+<form method="POST">
+  {% csrf_token %}
+  <label>Comment:</label><br>
+  <textarea name="comment" rows='3' style="width:95%; padding: 0.8em; font-size: 1.1em; line-height: 1.5em; font-family: 'Calibri','Arial', sans-serif;"></textarea>
+  <br>
+
+  <label>Minuto:</label><br>
+  <input type="text" name="minuto" style="width:25%; padding-top:0.5em;padding-bottom:0.5em;">
+  <br><br>
+
+
+
+
+  
+  <input type="submit" value="Save Comment">
+
+
+</form>
+
+
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+{% endblock %}

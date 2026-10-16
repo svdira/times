@@ -1,0 +1,56 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}Add teams to {{this_liga.nombre}}{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>Add teams to {{this_liga.nombre}}</h2>
+<br>
+
+<form method="POST">
+  {% csrf_token %}
+
+
+  <table>
+  <tr>
+    {% for i in equipos %}
+    <td><input type="checkbox" name="{{i.nombre}}">{{i.nombre}}</td>
+    {% if forloop.counter|divisibleby:4 %}
+      </tr><tr>
+    {% endif %}
+  {% endfor %}
+  </tr>
+</table>
+  
+
+   <br><br>
+  
+  <input type="submit" value="Add Teams">
+
+
+</form>
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+    
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+      
+    {% endfor %}
+
+</ul>
+
+
+
+{% endblock %}

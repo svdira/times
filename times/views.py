@@ -42,30 +42,47 @@ def tag(request,tag):
 	return render(request,'tag.html',{'articles':resultados})
 
 def addItem(request):
-	if request.method == 'POST':
-		titulo = request.POST.get("titulo")
-		preview = request.POST.get("contenido")
-		cat_id = int(request.POST.get("categoria"))
-		pub_date = request.POST.get("pub_date")
-		categoria = Categoria.objects.get(pk=int(cat_id))
-		if categoria.nom_categoria == 'journal' and pub_date:
-			date_obj = datetime.strptime(pub_date, "%Y-%m-%d")
-			titulo = date_obj.strftime("%A, %B %d, %Y")
+    parent = int(request.GET.get('parent', 0))
+    if request.method == 'POST':
+        titulo = request.POST.get("titulo")
+        preview = request.POST.get("contenido")
+        cat_id = int(request.POST.get("categoria"))
+        pub_date = request.POST.get("pub_date")
+        categoria = Categoria.objects.get(pk=int(cat_id))
 
-		newI = Item.objects.create(titulo = titulo, fecha_creacion = pub_date, tipo =categoria, preview=preview)
-		newI.save()
-		if request.POST.get("tags"):
-			for t in request.POST.get("tags").split(","):
-				newt = ItemTag.objects.create(item=newI,tag=t)
-				newt.save()
+        if categoria.nom_categoria == 'journal' and pub_date:
+            date_obj = datetime.strptime(pub_date, "%Y-%m-%d")
+            titulo = date_obj.strftime("%A, %B %d, %Y")
 
-		if newI.tipo.nom_categoria == 'book':
-			return redirect('addAttrs',item=newI.id)
-		else:
-			return redirect('item',item=newI.id)
+        newI = Item.objects.create(titulo=titulo, fecha_creacion=pub_date, tipo=categoria, preview=preview)
+        newI.save()
 
+        if parent > 0:
+            newT = AttrInteger.objects.create(item=newI, att_name='parent', orden=9999, att_value=parent)
+        # Procesar imagen
+        if 'imagen' in request.FILES:
+            AttrImage.objects.create(
+                item=newI,
+                imagen=request.FILES['imagen'],
+                att_name='cover',
+                orden=1
+            )
 
-	return render(request,'add-item.html',{})
+        if request.POST.get("tags"):
+            for t in request.POST.get("tags").split(","):
+                newt = ItemTag.objects.create(item=newI, tag=t.strip())
+                newt.save()
+
+        if newI.tipo.nom_categoria == 'book':
+            return redirect('addAttrs', item=newI.id)
+        else:
+            return redirect('item', item=newI.id)
+
+    this_parent = None
+    if parent > 0:
+        this_parent = Item.objects.get(pk=parent)
+
+    return render(request, 'add-item.html', {'this_parent':this_parent})
 
 def addAttrs(request,item):
 	this_item = Item.objects.get(pk=int(item))
@@ -98,7 +115,11 @@ def item(request,item):
 	aplica_consumo = 1 if this_item.tipo.nom_categoria in ['book','bunko','movie','manga volume','comic book','magazine issue','anime season','show season','TV miniseries'] else 0
 	tags = ItemTag.objects.filter(item=this_item)
 	nsecciones = len(this_item.secciones) if this_item.secciones else 0
-	return render(request,'item.html',{'this_item':this_item,'tags':tags,'aplica_consumo':aplica_consumo,'inprogress':inprogress,'nsecciones':nsecciones})
+	this_parent = None
+	if AttrInteger.objects.filter(item=this_item, att_name='parent').count() > 0:
+	    obj_parent = AttrInteger.objects.filter(item=this_item, att_name='parent').latest('id')
+	    this_parent = Item.objects.get(pk=obj_parent.att_value)
+	return render(request,'item.html',{'this_item':this_item,'tags':tags,'aplica_consumo':aplica_consumo,'inprogress':inprogress,'nsecciones':nsecciones,'this_parent':this_parent})
 
 def addSeccion(request,item):
 	this_item = Item.objects.get(pk=int(item))
@@ -125,34 +146,48 @@ def editSeccion(request,seccion):
 		return redirect('item',item=this_seccion.item.id)
 	return render(request,'edit-seccion.html',{'this_seccion':this_seccion,'mode':mode})
 
-def editItem(request,item):
-	this_item = Item.objects.get(pk=int(item))
-	parent = None
-	parent_id = 0
+def editItem(request, item):
+    this_item = Item.objects.get(pk=int(item))
+    parent = None
+    parent_id = 0
 
-	if AttrInteger.objects.filter(item=this_item,att_name='parent'):
-		parent = AttrInteger.objects.filter(item=this_item,att_name='parent').latest('id')
-		parent_id = parent.id
+    if AttrInteger.objects.filter(item=this_item, att_name='parent'):
+        parent = AttrInteger.objects.filter(item=this_item, att_name='parent').latest('id')
+        parent_id = parent.att_value
 
-	if request.method == 'POST':
-		this_item.titulo = request.POST.get("titulo")
-		this_item.preview = request.POST.get("contenido")
-		this_item.save()
-		if parent_id > 0:
-			parent.att_value = int(request.POST.get("parent"))
-			parent.save()
+    if request.method == 'POST':
+        this_item.titulo = request.POST.get("titulo")
+        this_item.preview = request.POST.get("contenido")
+        this_item.save()
 
-		if parent is None and len(request.POST.get("parent"))>1:
-			newT = AttrInteger.objects.create(item=this_item,att_name='parent',orden=9999,att_value=int(request.POST.get("parent")))
-			newT.save()
+        if parent_id > 0:
+            parent.att_value = int(request.POST.get("parent"))
+            parent.save()
 
-		if request.POST.get("tags"):
-			for t in request.POST.get("tags").split(","):
-				newt = ItemTag.objects.create(item=this_item,tag=t)
-				newt.save()
+        if parent is None and len(request.POST.get("parent", "")) > 1:
+            newT = AttrInteger.objects.create(item=this_item, att_name='parent', orden=9999, att_value=int(request.POST.get("parent")))
+            newT.save()
 
-		return redirect('item',item=this_item.id)
-	return render(request,'edit-item.html',{'this_item':this_item,'parent':parent_id})
+        if request.POST.get("tags"):
+            for t in request.POST.get("tags").split(","):
+                newt = ItemTag.objects.create(item=this_item, tag=t.strip())
+                newt.save()
+
+        # Actualizar o crear imagen
+        if 'imagen' in request.FILES:
+            AttrImage.objects.create(
+                item=this_item,
+                imagen=request.FILES['imagen'],
+                att_name='cover',
+                orden=1)
+
+        return redirect('item', item=this_item.id)
+
+
+    return render(request, 'edit-item.html', {
+        'this_item': this_item,
+        'parent': parent_id
+    })
 
 def startConsumo(request,item):
 	this_item = Item.objects.get(pk=int(item))
@@ -231,7 +266,7 @@ def addMovie(request):
 
 
 		url = "https://api.themoviedb.org/3/movie/{}/credits?language=en-US".format(movie_id)
-	
+
 
 		response = requests.get(url, headers=headers)
 		movie_dict_2 = json.loads(response.text)
@@ -243,9 +278,9 @@ def addMovie(request):
 		for c in movie_dict_2['cast'][0:25]:
 			newt = ItemTag.objects.create(item=newI,tag=c['original_name'])
 			newt.save()
-		
+
 		return redirect("item",item=newI.id)
-				
+
 
 
 	return render(request,'add-movie.html',{})

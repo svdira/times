@@ -1,0 +1,178 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}{{this_liga.nombre}}'s Page{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>{{this_liga.nombre}} Main Page</h2>
+<p><span class="detalles"><a href="{% url 'addMatch' this_liga.id %}"  style="text-decoration:none; color:grey;">Add Match</a> | <a href="{% url 'addTeams' this_liga.id %}"  style="text-decoration:none; color:grey;">Add Teams</a></span></p>
+
+{% if pp %}
+
+
+  <h3>Coming Matches</h3>
+  {% for p in pp %}
+
+        <div class="match-card">
+          <div class="match-meta">
+            <span class="match-date">{{p.fecha}}</span>
+            <span class="match-league"> {{p.fase}}</span>
+          </div>
+
+          <a href="{% url 'partido' p.id %}" style="text-decoration:none;">
+
+          <div class="match-body">
+            <div class="team home">
+              <span class="team-name">{{p.local.nombre}}</span>
+            </div>
+
+            <div class="score">
+              <span class="goals">&nbsp;&nbsp;</span>
+              <span class="divider">–</span>
+              <span class="goals">&nbsp;&nbsp;</span>
+            </div>
+
+            <div class="team away">
+              <span class="team-name">{{p.visita.nombre}}</span>
+            </div>
+          </div></a>
+        </div>
+
+        <br>
+  {% endfor %}
+
+{% endif %}
+
+{% if pe %}
+
+  <h3>Elimination Matches</h3>
+
+  {% for p in pe %}
+
+        <div class="match-card">
+          <div class="match-meta">
+            <span class="match-date">{{p.fecha}}</span>
+            <span class="match-league"><a href="{% url 'ligaFase' this_liga.id p.fase %}" style="text-decoration:none; color:blue;">{{p.fase}}</a></span>
+          </div>
+          <a href="{% url 'partido' p.id %}" style="text-decoration:none;">
+          <div class="match-body">
+            <div class="team home">
+              <span class="team-name">{{p.local.nombre}}</span>
+            </div>
+
+            <div class="score">
+              <span class="goals">{{p.goles_local}}{% if p.rondap_local %}&nbsp;({{p.rondap_local}}{% endif %}</span>
+              <span class="divider">–</span>
+              <span class="goals">{% if p.rondap_visita%}{{p.rondap_visita}})&nbsp;{% endif %}{{p.goles_visita}}</span>
+            </div>
+
+
+            <div class="team away">
+              <span class="team-name">{{p.visita.nombre}}</span>
+            </div>
+          </div></a>
+        </div>
+
+        <br>
+  {% endfor %}
+
+{% endif %}
+
+
+{% if tabla %}
+<br>
+<h2>Position Table</h2><br>
+  <table>
+    <tr>
+      <th>#</th>
+      <th>Equipo</th>
+      <th>Pts</th>
+      <th>PJ</th>
+      <th>PG</th>
+      <th>DG</th>
+      <th>GF</th>
+    </tr>
+    {% for t in tabla %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><a href="{% url 'ligaEquipo' this_liga.id t.equipo_id %}" style="text-decoration: none; color: black;">{{t.Equipo}}</a></td>
+    <td>{{t.Pts}}</td>
+    <td>{{t.PJ}}</td>
+    <td>{{t.PG}}</td>
+    <td>{{t.DG}}</td>
+    <td>{{t.GF}}</td>
+  </tr>
+  {% endfor %}
+  </table><br>
+{% endif %}
+
+
+
+
+
+
+
+{% if pt %}
+<br><br>
+
+  <h3>Finished Matches</h3>
+
+  {% for p in pt %}
+
+        <div class="match-card">
+          <div class="match-meta">
+            <span class="match-date">{{p.fecha}}</span>
+            <span class="match-league"><a href="{% url 'ligaFase' this_liga.id p.fase %}" style="text-decoration:none; color:blue;">{{p.fase}}</a></span>
+          </div>
+          <a href="{% url 'partido' p.id %}" style="text-decoration:none;">
+          <div class="match-body">
+            <div class="team home">
+              <span class="team-name">{{p.local.nombre}}</span>
+            </div>
+
+            <div class="score">
+              <span class="goals">{{p.goles_local}}{% if p.rondap_local %}&nbsp;({{p.rondap_local}}{% endif %}</span>
+              <span class="divider">–</span>
+              <span class="goals">{% if p.rondap_visita%}{{p.rondap_visita}})&nbsp;{% endif %}{{p.goles_visita}}</span>
+            </div>
+
+
+            <div class="team away">
+              <span class="team-name">{{p.visita.nombre}}</span>
+            </div>
+          </div></a>
+        </div>
+
+        <br>
+  {% endfor %}
+
+{% endif %}
+
+
+
+
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+
+
+{% endblock %}

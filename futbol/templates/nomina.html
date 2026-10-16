@@ -1,0 +1,177 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}{{this_equipo.nombre}}'s Page{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>{{this_equipo.nombre}}'s Players | <a href="{% url 'equipo' this_equipo.id %}">Matches</a> </h2>
+
+<p><span class="detalles"><a href="{% url 'addContrato' this_equipo.id %}"  style="text-decoration:none; color:grey;">Add Contract</a></span></p>
+
+
+
+{% if arqueros %}
+<h3>Arqueros</h3>
+<div class="image-grid">
+		{% for c in arqueros %}
+			<a href="{% url 'editContrato' c.id %}"  style="text-decoration: none; color:black;">
+		
+			
+		    <div class="image-card">
+			{% if c.jugador.mainPic %}
+				<img src="{{c.jugador.mainPic.imagen.url}}">
+			{% else %}
+			   <img src="/media/assets/blank-profile-picture.png" alt="">
+			{% endif %}
+		     
+		        <p class="image-caption">{{c.jugador.nombre}}</p>
+		    </div>
+
+		</a>
+    	{% endfor %}
+
+	</div>
+{% endif %}
+
+{% if defensas %}
+<h3>Defensas</h3>
+<div class="image-grid">
+		{% for c in defensas %}
+			<a href="{% url 'editContrato' c.id %}"  style="text-decoration: none; color:black;">
+			
+
+		     <div class="image-card">
+			{% if c.jugador.mainPic %}
+				<img src="{{c.jugador.mainPic.imagen.url}}">
+			{% else %}
+			   <img src="/media/assets/blank-profile-picture.png" alt="">
+			{% endif %}
+		     
+		        <p class="image-caption">{{c.jugador.nombre}}</p>
+		    </div>
+
+
+		</a>
+    	{% endfor %}
+
+	</div>
+{% endif %}
+
+{% if centros %}
+<h3>Centrocampistas</h3>
+<div class="image-grid">
+		{% for c in centros %}
+			<a href="{% url 'editContrato' c.id %}"  style="text-decoration: none; color:black;">
+			
+
+		     <div class="image-card">
+			{% if c.jugador.mainPic %}
+				<img src="{{c.jugador.mainPic.imagen.url}}">
+			{% else %}
+			   <img src="/media/assets/blank-profile-picture.png" alt="">
+			{% endif %}
+		     
+		        <p class="image-caption">{{c.jugador.nombre}}</p>
+		    </div>
+
+		 
+		</a>
+    	{% endfor %}
+
+	</div>
+{% endif %}
+
+{% if delanteros %}
+<h3>Delanteros</h3>
+<div class="image-grid">
+		{% for c in delanteros %}
+			<a href="{% url 'editContrato' c.id %}"  style="text-decoration: none; color:black;">
+			
+
+		    <div class="image-card">
+			{% if c.jugador.mainPic %}
+				<img src="{{c.jugador.mainPic.imagen.url}}">
+			{% else %}
+			   <img src="/media/assets/blank-profile-picture.png" alt="">
+			{% endif %}
+		     
+		        <p class="image-caption">{{c.jugador.nombre}}</p>
+		    </div>
+		   
+		</a>
+    	{% endfor %}
+
+	</div>
+{% endif %}
+
+
+
+{% if dt %}
+
+      <h4 >Coach</h4>
+
+
+  <div class="image-grid">
+		{% for c in dt %}
+			<a href="{% url 'editContrato' c.id %}"  style="text-decoration: none; color:black;">
+
+
+		    <div class="image-card">
+			{% if c.jugador.mainPic %}
+				<img src="{{c.jugador.mainPic.imagen.url}}">
+			{% else %}
+			   <img src="/media/assets/blank-profile-picture.png" alt="">
+			{% endif %}
+		     
+		        <p class="image-caption">{{c.jugador.nombre}}</p>
+		    </div>
+
+	
+		</a>
+    	{% endfor %}
+
+	</div>
+{% endif %}
+
+
+{% if tba %}
+<br>
+
+  <table>
+    <th style="text-align: left;">TBA</th>
+    {% for c in tba %}
+      <tr>
+        <td><a href="{% url 'editContrato' c.id %}" style="text-decoration:none;">{{c.jugador.nombre}}</a></td>
+        <td>{{c.dorsal}}</td>
+        <td>{{c.jugador.pais}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+
+{% endblock %}
+
+
+
+
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+
+    {% endfor %}
+
+</ul>
+
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}Add Line Up{% endblock %}
+
+{% block izquierda %}
+
+
+<h2>LineUps <a href="{% url 'partido' this_partido.id %}" style="text-decoration:none;">{{this_partido.headline}}</a></h2>
+<br>
+
+{% if alineaciones %}
+  <table>
+    <tr>
+      <th colspan="3">Confirmed Lineups</th>
+    </tr>
+    {% for a in alineaciones %}
+    <tr>
+      <td>{{a.contrato.dorsal}}</td>
+      <td>{{a.contrato.jugador.nombre}}</td>
+      <td>{{a.contrato.posicion|capfirst}}</td>
+      <td>{{a.tipo|capfirst}}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <br>
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+
+  <table>
+    <tr>
+        <th>Jugador</th>
+        <th>T90</th>
+        <th>TSa</th>
+        <th>Bca</th>
+    </tr>
+       {% for c in contratos %}
+  <tr>
+ 
+      <td>{{c.jugador.nombre}} | {{c.posicion}}</td>
+      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="titular90"></td>
+      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="titularSale"></td>
+      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="bancaEntra"></td>
+    
+  </tr>
+  {% endfor %}
+</table>
+  
+
+   <br><br>
+  
+  <input type="submit" value="Save LineUP">
+
+
+</form>
+<br>
+<hr>
+<h3>Add New Player</h3>
+<form action="{% url 'addContratoShort' %}" method="POST">
+  {% csrf_token %}
+  <label>Nombre</label>
+  <input type="text" name="nombre" style="padding-top:0.3rem; padding-bottom: 0.3rem;">
+  <input type="hidden" name="equipo" value="{{this_equipo.id}}">
+  <input type="hidden" name="partido" value="{{this_partido.id}}">
+  <br><br>
+  <input type="submit" value="Add Player">  
+</form>
+
+
+
+{% endblock %}
+
+
+{% block derecha %}
+
+<h3>Leagues</h3>
+
+<ul class="list-group">
+    {% for c in ligas %}
+    
+
+        <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
+      
+    {% endfor %}
+
+</ul>
+
+
+
+{% endblock %}
