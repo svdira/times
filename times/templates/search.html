@@ -1,0 +1,64 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Búsqueda {% endblock %}
+
+{% block izquierda %}
+
+<form action="{% url 'searchItems' %}" method="GET" style="margin: 10px 0; text-align: center;">
+  <input type="text" name="q" placeholder="Buscar items..." value="{{ query }}" style="padding: 6px; width: 60%; border-radius: 4px; border: 1px solid #ccc;">
+  <button type="submit" style="padding: 6px 12px; border-radius: 4px; background: #007bff; color: white; border: none;">Buscar</button>
+</form>
+
+<hr/>
+
+  <h2>Resultados de búsqueda {% if query %}para "{{ query }}"{% endif %}</h2>
+  <hr style="margin-bottom: 1.5em;">
+
+  {% if articles %}
+    {% for a in articles %}
+      {% if a.cover_image %}
+        <img src="{{ a.cover_image.imagen.url }}" class="img-desktop" style="float:left; width: 40%; max-width: 200px; margin-top: 0.4em; margin-left: 0em; margin-right: 0.9em; margin-bottom: 0.3em; border: 1px solid gray;">
+      {% endif %}
+
+      <h2><a href="{% url 'item' a.id %}" style="text-decoration:none; color:#007bff; ">{{a.titulo}}{{a.periodo}}</a> {% if a.consumos > 0 %}&#9989;{%endif%}</h2>
+
+      <p><span class="detalles">{{a.tipo.nom_categoria|title}} | {{a.fecha_creacion|date:"F j, Y"}}</p>
+
+      {% if a.cover_image %}
+        <img src="{{ a.cover_image.imagen.url }}" class="img-mobile" style="border: 1px solid gray;">
+      {% endif %}
+
+      <p>{{a.preview|truncatewords:50 }}</p>
+      <div style="clear:both;"></div>
+      <hr style="margin-bottom: 0.9em; margin-top: 0em;">
+      <div style="clear:both"></div>
+    {% endfor %}
+  {% else %}
+    <p>No se encontraron elementos que coincidan con la búsqueda.</p>
+  {% endif %}
+
+  <ul class="pagination">
+     {% if articles.has_previous %}
+        <li><a href="?q={{ query }}&page={{ articles.previous_page_number }}">Previous</a></li>
+    {% endif %}
+    {% if articles.paginator.num_pages > 0 %}
+      <li><a href="#">Page {{ articles.number }} of {{ articles.paginator.num_pages }}</a> </li>
+    {% endif %}
+    {% if articles.has_next %}
+        <li><a href="?q={{ query }}&page={{ articles.next_page_number }}">Next</a></li>
+    {% endif %}
+  </ul>
+
+{% endblock %}
+
+{% block derecha %}
+<ul class="list-group">
+  {% for c in cats %}
+    <li class="list-group-item">
+      <a href="{% url 'categoria' c.id %}" style="text-decoration:none;">{{ c.nom_categoria|title }}</a>
+      <span class="badge badge-pill">{{ c.total_items }}</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

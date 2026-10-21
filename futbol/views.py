@@ -21,6 +21,8 @@ from django.shortcuts import render
 
 
 
+
+
 def addContrato(request,equipo):
 	equipo = Equipo.objects.get(pk=int(equipo))
 

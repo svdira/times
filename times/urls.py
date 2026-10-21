@@ -20,4 +20,5 @@ urlpatterns = [
 	path('item/<int:item_id>/add-attribute/', views.add_attribute, name='addAttribute'),
 	path('tag/<tag>', views.tag, name='tag'),
 	path('add-movie/', views.addMovie, name='addMovie'),
+	path('search/', views.search_items, name='searchItems'),
 	]

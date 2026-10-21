@@ -20,6 +20,34 @@ import os
 import requests
 import json
 
+
+from django.db.models import Q
+
+def search_items(request):
+    query = request.GET.get('q', '').strip()
+    articles = []
+    
+    if query:
+        items_by_title = Item.objects.filter(titulo__icontains=query)
+        
+
+        items_by_preview = Item.objects.filter(preview__icontains=query)
+        
+    
+        sections = Seccion.objects.filter(
+            Q(titulo__icontains=query) | Q(contenido__icontains=query)
+        )
+        items_by_section = Item.objects.filter(seccion__in=sections)
+        
+     
+        articles = list(items_by_title | items_by_preview | items_by_section)
+        
+    page = request.GET.get('page', 1)
+    paginator = Paginator(articles, 12)
+    resultados = paginator.get_page(page)
+    
+    return render(request, 'search.html', {'articles': resultados, 'query': query})
+
 def homepage(request):
 	page = request.GET.get('page', 1)
 	articles = Item.objects.all().order_by('-fecha_creacion','-fecha_edicion')
@@ -39,7 +67,7 @@ def tag(request,tag):
 	articles = ItemTag.objects.filter(tag=tag).order_by('-item__fecha_creacion')
 	paginator = Paginator(articles, 12)
 	resultados = paginator.get_page(page)
-	return render(request,'tag.html',{'articles':resultados})
+	return render(request,'tag.html',{'articles':resultados,'this_tag':tag})
 
 def addItem(request):
     parent = int(request.GET.get('parent', 0))
@@ -201,6 +229,8 @@ def startConsumo(request,item):
 			this_item.save()
 		elif this_item.tipo.nom_categoria == 'movie':
 			newC = Consumo.objects.create(item=this_item,fec_ini=fec_ini,fec_fin=fec_ini)
+			this_item.fecha_creacion = fec_ini
+			this_item.save()
 		else:
 			newC = Consumo.objects.create(item=this_item,fec_ini=fec_ini)
 

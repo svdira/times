@@ -5,6 +5,7 @@ from django.utils import timezone
 import os
 from uuid import uuid4
 from django.db.models import Q, Avg, Count, Min, Sum
+from django.db.models import Subquery, OuterRef, F
 from random import choice
 import markdown
 from itertools import chain
@@ -100,7 +101,6 @@ class Item(models.Model):
 
     @property
     def members(self):
-
         # Fetch the latest attribute entry in a single SQL query
         item_ids = list(AttrInteger.objects.filter(att_name='parent', att_value=self.id)
         .order_by('id')
@@ -110,11 +110,20 @@ class Item(models.Model):
         if item_ids:
             try:
                 if isinstance(item_ids, (list, tuple, set)):
-                    return Item.objects.filter(id__in=item_ids)
+                    # Subquery to grab the latest att_value for pub date / premiere / pubdate
+                    pub_date_subquery = AttrDate.objects.filter(
+                        item=OuterRef('pk'),
+                        att_name__in=['pub date', 'premiere', 'pubdate']
+                    ).order_by('-id').values('att_value')[:1]
+
+                    # Annotate and order, putting items without the date first
+                    return Item.objects.filter(id__in=item_ids).annotate(
+                        sort_pub_date=Subquery(pub_date_subquery)
+                    ).order_by(F('sort_pub_date').asc(nulls_first=True))
             except (ValueError, SyntaxError):
                 pass
 
-        return Item.objects.none() # Returning empty QuerySet is cleaner for Django templates
+        return Item.objects.none()
 
     def __str__(self):
         return self.titulo

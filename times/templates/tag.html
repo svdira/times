@@ -5,15 +5,26 @@
 
 {% block izquierda %}
 
+<h3>{{this_tag}}: Items</h3>
+
 
   {% if articles %}
     {% for a in articles %}
-   
+
+    <!-- DESKTOP IMAGE (Appears before the title/floated left) -->
+      {% if a.cover_image %}
+        <img src="{{ a.cover_image.imagen.url }}" class="img-desktop" style="float:left; width: 40%; max-width: 200px; margin-top: 0.4em; margin-left: 0em; margin-right: 0.9em; margin-bottom: 0.3em; border: 1px solid gray;">
+      {% endif %}
+
       <h2><a href="{% url 'item' a.item.id %}" style="text-decoration:none; color:#007bff; ">{{a.item.titulo}}{{a.periodo}}</a> {% if a.item.consumos > 0 %}&#9989;{%endif%}</h2>
-      
+
 
       <p><span class="detalles">{{a.item.tipo.nom_categoria|title}} | {{a.item.fecha_creacion|date:"F j, Y"}}</p>
 
+     <!-- MOBILE IMAGE (Appears right before the preview paragraph) -->
+      {% if a.cover_image %}
+        <img src="{{ a.cover_image.imagen.url }}" class="img-mobile" style="border: 1px solid gray;">
+      {% endif %}
 
 
 
@@ -51,6 +62,6 @@
 			<span class="badge badge-pill">{{ c.total_items }}</span>
 		</li>
 	{% endfor %}
-  
+
 </ul>
 {% endblock %}
