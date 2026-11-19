@@ -1,0 +1,110 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Registrar Gasto{% endblock %}
+
+{% block izquierda %}
+<h2>Registrar Gasto</h2>
+
+<form method="post" class="times-form">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label for="datepicker">Fecha</label>
+    <input type="text" id="datepicker" name="fecha" value="{{ today }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="cuenta">Cuenta de Gasto</label>
+    <select id="cuenta" name="cuenta" required>
+      <option value="">-- Selecciona una cuenta --</option>
+      {% for cat in categorias %}
+        <optgroup label="{{ cat.categoria }}">
+          {% for cta in cat.cat_gasto.all %}
+            <option value="{{ cta.id }}">{{ cta.cuenta }}</option>
+          {% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="tipo_origen">Tipo de Origen</label>
+    <select id="tipo_origen" name="tipo_origen" required onchange="filtrarOrigenes()">
+      <option value="1">Depósito / Cuenta Bancaria</option>
+      <option value="2">Línea de Crédito / Tarjeta</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="origen">Origen de Fondos</label>
+    <select id="origen" name="origen" required>
+      {% for dep in depositos %}
+        <option value="{{ dep.id }}" data-tipo="1">{{ dep.nombre }} ({{ dep.entidad }}) — ${{ dep.saldo }}</option>
+      {% endfor %}
+      {% for lc in lineas_credito %}
+        <option value="{{ lc.id }}" data-tipo="2">{{ lc.nombre }} ({{ lc.entidad }}) — Saldo: ${{ lc.saldo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="monto">Monto ($)</label>
+    <input type="number" id="monto" name="monto" step="0.01" min="0.01" placeholder="0.00" required>
+  </div>
+
+  <div class="form-group">
+    <label for="descripcion">Descripción</label>
+    <textarea id="descripcion" name="descripcion" rows="4" placeholder="Detalle del gasto..."></textarea>
+  </div>
+
+  <button type="submit" class="btn-submit">Guardar Gasto</button>
+</form>
+
+<script>
+  function filtrarOrigenes() {
+    const tipoSeleccionado = document.getElementById('tipo_origen').value;
+    const selectOrigen = document.getElementById('origen');
+    const opciones = selectOrigen.querySelectorAll('option');
+    let primerVisible = null;
+
+    opciones.forEach(opt => {
+      if (opt.dataset.tipo === tipoSeleccionado) {
+        opt.hidden = false;
+        opt.disabled = false;
+        if (!primerVisible) primerVisible = opt;
+      } else {
+        opt.hidden = true;
+        opt.disabled = true;
+      }
+    });
+
+    if (primerVisible) {
+      selectOrigen.value = primerVisible.value;
+    } else {
+      selectOrigen.value = "";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', filtrarOrigenes);
+</script>
+{% endblock %}
+
+{% block derecha %}
+<h2>Últimos Gastos</h2>
+<ul class="styled-list">
+  {% for g in ultimos_gastos %}
+    <li>
+      <span class="main-item">{{ g.cuenta.cuenta }} — ${{ g.monto }}</span>
+      <span class="sub-item">{{ g.fecha|date:"Y-m-d" }} · {{ g.cuenta.categoria.categoria }}</span>
+      {% if g.descripcion %}
+        <span class="sub-item">{{ g.descripcion }}</span>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>
+      <span class="sub-item">Aún no hay gastos registrados.</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

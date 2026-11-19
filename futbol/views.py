@@ -18,6 +18,7 @@ from itertools import groupby
 from operator import itemgetter
 import os
 from django.shortcuts import render
+from django.db.models import Case, When, Value, IntegerField
 
 
 
@@ -429,7 +430,7 @@ def regGol(request):
 
 def addTeams(request,liga):
 	query = request.GET.get('q', 'all')
-	
+
 	this_liga = Torneo.objects.get(pk=int(liga))
 
 	ligas = Torneo.objects.all().order_by('-id')
@@ -467,10 +468,10 @@ def alineacion(request,partido,equipo):
 	this_equipo = Equipo.objects.get(pk=int(equipo))
 	ligas = Torneo.objects.all().order_by('-id')
 
-	these_alineaciones = Alineacion.objects.filter(partido=this_partido, equipo=this_equipo).order_by('contrato__n_posicion','contrato__dorsal')
+	these_alineaciones = Alineacion.objects.filter(partido=this_partido, equipo=this_equipo).order_by(Case(When(contrato__posicion='arquero', then=Value(1)), When(contrato__posicion='defensa', then=Value(2)), When(contrato__posicion='centrocampista', then=Value(3)), When(contrato__posicion='delantero', then=Value(4)), default=Value(5), output_field=IntegerField()), 'contrato__jugador__nombre')
 	alineaciones = Alineacion.objects.filter(partido=this_partido, equipo=this_equipo).values_list('contrato__id', flat=True)
 	ids_list = list(alineaciones)
-	contratos = Contrato.objects.filter(equipo=this_equipo).exclude(id__in=ids_list).exclude(posicion='dt').order_by('jugador__nombre')
+	contratos = Contrato.objects.filter(equipo=this_equipo, fec_fin__isnull=True).exclude(id__in=ids_list).exclude(posicion='dt').order_by(Case(When(posicion='arquero', then=Value(1)), When(posicion='defensa', then=Value(2)), When(posicion='centrocampista', then=Value(3)), When(posicion='delantero', then=Value(4)), default=Value(5), output_field=IntegerField()), 'jugador__nombre')
 
 	if request.method == 'POST':
 		for c in contratos:

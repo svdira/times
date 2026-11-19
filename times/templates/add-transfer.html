@@ -1,0 +1,111 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Transferencia entre Cuentas{% endblock %}
+
+{% block izquierda %}
+<h2>Transferencia entre Cuentas</h2>
+
+<form method="post" class="times-form">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label for="datepicker">Fecha</label>
+    <input type="text" id="datepicker" name="fecha" value="{{ today }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="tipo_origen">Tipo de Origen</label>
+    <select id="tipo_origen" name="tipo_origen" required onchange="filtrarSelect('tipo_origen', 'origen')">
+      <option value="1">Depósito / Cuenta Bancaria</option>
+      <option value="2">Línea de Crédito / Tarjeta</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="origen">Cuenta Origen</label>
+    <select id="origen" name="origen" required>
+      {% for dep in depositos %}
+        <option value="{{ dep.id }}" data-tipo="1">{{ dep.nombre }} ({{ dep.entidad }}) — ${{ dep.saldo }}</option>
+      {% endfor %}
+      {% for lc in lineas_credito %}
+        <option value="{{ lc.id }}" data-tipo="2">{{ lc.nombre }} ({{ lc.entidad }}) — Saldo: ${{ lc.saldo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="tipo_destino">Tipo de Destino</label>
+    <select id="tipo_destino" name="tipo_destino" required onchange="filtrarSelect('tipo_destino', 'destino')">
+      <option value="1">Depósito / Cuenta Bancaria</option>
+      <option value="2">Línea de Crédito / Tarjeta</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="destino">Cuenta Destino</label>
+    <select id="destino" name="destino" required>
+      {% for dep in depositos %}
+        <option value="{{ dep.id }}" data-tipo="1">{{ dep.nombre }} ({{ dep.entidad }}) — ${{ dep.saldo }}</option>
+      {% endfor %}
+      {% for lc in lineas_credito %}
+        <option value="{{ lc.id }}" data-tipo="2">{{ lc.nombre }} ({{ lc.entidad }}) — Saldo: ${{ lc.saldo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="monto">Monto ($)</label>
+    <input type="number" id="monto" name="monto" step="0.01" min="0.01" placeholder="0.00" required>
+  </div>
+
+  <button type="submit" class="btn-submit">Registrar Transferencia</button>
+</form>
+
+<script>
+  function filtrarSelect(tipoId, targetId) {
+    const tipoSeleccionado = document.getElementById(tipoId).value;
+    const selectTarget = document.getElementById(targetId);
+    const opciones = selectTarget.querySelectorAll('option');
+    let primerVisible = null;
+
+    opciones.forEach(opt => {
+      if (opt.dataset.tipo === tipoSeleccionado) {
+        opt.hidden = false;
+        opt.disabled = false;
+        if (!primerVisible) primerVisible = opt;
+      } else {
+        opt.hidden = true;
+        opt.disabled = true;
+      }
+    });
+
+    if (primerVisible) {
+      selectTarget.value = primerVisible.value;
+    } else {
+      selectTarget.value = "";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    filtrarSelect('tipo_origen', 'origen');
+    filtrarSelect('tipo_destino', 'destino');
+  });
+</script>
+{% endblock %}
+
+{% block derecha %}
+<h2>Últimos Movimientos de Entrada</h2>
+<ul class="styled-list">
+  {% for mov in ultimos_movimientos %}
+    <li>
+      <span class="main-item">{{ mov.destino_nombre }} — ${{ mov.monto }}</span>
+      <span class="sub-item">{{ mov.fecha|date:"Y-m-d" }} · {{ mov.tipo_label }}</span>
+    </li>
+  {% empty %}
+    <li>
+      <span class="sub-item">Sin movimientos recientes.</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

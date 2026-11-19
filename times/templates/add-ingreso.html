@@ -1,0 +1,88 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Registrar Ingreso / Abono{% endblock %}
+
+{% block izquierda %}
+<h2>Registrar Ingreso / Abono</h2>
+
+<form method="post" class="times-form">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label for="datepicker">Fecha</label>
+    <input type="text" id="datepicker" name="fecha" value="{{ today }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="tipo_destino">Tipo de Destino</label>
+    <select id="tipo_destino" name="tipo_destino" required onchange="filtrarDestinos()">
+      <option value="1">Depósito / Cuenta Bancaria</option>
+      <option value="2">Línea de Crédito / Tarjeta</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="destino">Destino</label>
+    <select id="destino" name="destino" required>
+      {% for dep in depositos %}
+        <option value="{{ dep.id }}" data-tipo="1">{{ dep.nombre }} ({{ dep.entidad }}) — ${{ dep.saldo }}</option>
+      {% endfor %}
+      {% for lc in lineas_credito %}
+        <option value="{{ lc.id }}" data-tipo="2">{{ lc.nombre }} ({{ lc.entidad }}) — Saldo: ${{ lc.saldo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="monto">Monto ($)</label>
+    <input type="number" id="monto" name="monto" step="0.01" min="0.01" placeholder="0.00" required>
+  </div>
+
+  <button type="submit" class="btn-submit">Guardar Ingreso</button>
+</form>
+
+<script>
+  function filtrarDestinos() {
+    const tipoSeleccionado = document.getElementById('tipo_destino').value;
+    const selectDestino = document.getElementById('destino');
+    const opciones = selectDestino.querySelectorAll('option');
+    let primerVisible = null;
+
+    opciones.forEach(opt => {
+      if (opt.dataset.tipo === tipoSeleccionado) {
+        opt.hidden = false;
+        opt.disabled = false;
+        if (!primerVisible) primerVisible = opt;
+      } else {
+        opt.hidden = true;
+        opt.disabled = true;
+      }
+    });
+
+    if (primerVisible) {
+      selectDestino.value = primerVisible.value;
+    } else {
+      selectDestino.value = "";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', filtrarDestinos);
+</script>
+{% endblock %}
+
+{% block derecha %}
+<h2>Últimos Ingresos / Abonos</h2>
+<ul class="styled-list">
+  {% for ing in ultimos_ingresos %}
+    <li>
+      <span class="main-item">{{ ing.destino_nombre }} — ${{ ing.monto }}</span>
+      <span class="sub-item">{{ ing.fecha|date:"Y-m-d" }} · {{ ing.tipo_label }}</span>
+    </li>
+  {% empty %}
+    <li>
+      <span class="sub-item">Aún no hay ingresos registrados.</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

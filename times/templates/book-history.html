@@ -5,20 +5,38 @@
 
 {% block izquierda %}
 
+ <h3>{{now_cat.nom_categoria|title}} History ({{total_count}}/{{distinct_count}})</h3>
+    <p>
+    {% for c in con_cats %}
+     <!-- Keep current category, but reset year when switching categories -->
+     <a href="{% url 'bookHistory' %}?cat={{c.id}}"><span class="badge badge-pill" style="font-family: Arial, Helvetica, sans-serif !important;">{{c.nom_categoria|title}}</span></a>
+  {% endfor %}
+</p>
+
+<!-- Year Filter Links with Counts -->
+{% if available_years %}
+<p>
+    <strong>Years:</strong>
+    <a href="{% url 'bookHistory' %}?cat={{now_cat.id}}">All</a> |
+    {% for d in available_years %}
+        <a href="{% url 'bookHistory' %}?cat={{now_cat.id}}&year={{d.year}}" style="text-decoration:none;" {% if selected_year == d.year|stringformat:"s" %}style="font-weight:bold; color:red; text-decoration:none;"{% endif %}>{{d.year}} ({{d.count}})</a>{% if not forloop.last %} | {% endif %}
+    {% endfor %}
+</p>
+{% endif %}
+
   {% if item_queue %}
 
-  <h3>Read Books ({{nbooks}})</h3>
   <ul class="styled-list">
 
   {% for i in item_queue %}
     <li>
       <span class="main-item"><a href="{% url 'item' i.item.id %}" style="text-decoration:none; color:black;">{{i.item.titulo}}{{i.item.periodo}} </a></span>
-      <small class="sub-item">{{i.fec_fin|date:"M j, Y"}} | {{i.item.authors}}</small>
+      <small class="sub-item">{{i.fec_fin|date:"M j, Y"}} {% if now_cat.id == 1 %}| {{i.item.authors}}{% endif %}</small>
     </li>
   {% endfor %}
   </ul>
   {% else %}
-  <h3 style="color:red;">No Item in  Progress</h3>
+  <h3 style="color:red;">No History Recorded, Yet.</h3>
   {% endif %}
 
 
@@ -34,6 +52,6 @@
       <span class="badge badge-pill">{{ c.total_items }}</span>
     </li>
   {% endfor %}
-  
+
 </ul>
 {% endblock %}

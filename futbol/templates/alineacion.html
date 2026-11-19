@@ -10,51 +10,381 @@
 <br>
 
 {% if alineaciones %}
-  <table>
-    <tr>
-      <th colspan="3">Confirmed Lineups</th>
-    </tr>
+<style>
+  .lineup-box {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .lineup-header {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'ArchivoNarrow', Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .lineup-counter {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+
+  .lineup-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lineup-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f3f5;
+    transition: background-color 0.15s ease;
+  }
+
+  .lineup-row:last-child {
+    border-bottom: none;
+  }
+
+  .lineup-row:nth-child(even) {
+    background-color: #fafbfd;
+  }
+
+  .lineup-row:hover {
+    background-color: #f0f6ff;
+  }
+
+  /* Dorsal */
+  .lineup-dorsal {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    background-color: #f1f3f5;
+    color: #495057;
+    font-family: 'ArchivoNarrow', Arial, sans-serif;
+    font-weight: bold;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Nombre y posición apilados (evita el scroll horizontal) */
+  .lineup-player {
+    flex: 1;
+    min-width: 0; /* Permite truncar o ajustar texto sin empujar la pantalla */
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .lineup-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lineup-pos {
+    font-size: 0.75rem;
+    color: #868e96;
+    margin-top: 2px;
+  }
+
+  /* Insignia de tipo de participación */
+  .lineup-badge {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'ArchivoNarrow', Arial, sans-serif;
+    border-radius: 12px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .badge-titular90 {
+    background-color: #e6f7ec;
+    color: #28a745;
+    border: 1px solid #b7ebc7;
+  }
+
+  .badge-titularsale {
+    background-color: #fff9db;
+    color: #d48806;
+    border: 1px solid #ffe58f;
+  }
+
+  .badge-bancaentra {
+    background-color: #e6f4ff;
+    color: #0078D4;
+    border: 1px solid #91caff;
+  }
+
+  .badge-default {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+  }
+</style>
+
+<div class="lineup-box">
+  <div class="lineup-header">
+    <span>Confirmed Lineups</span>
+    <span class="lineup-counter">{{ alineaciones|length }} jugadores</span>
+  </div>
+
+  <div class="lineup-list">
     {% for a in alineaciones %}
-    <tr>
-      <td>{{a.contrato.dorsal}}</td>
-      <td>{{a.contrato.jugador.nombre}}</td>
-      <td>{{a.contrato.posicion|capfirst}}</td>
-      <td>{{a.tipo|capfirst}}</td>
-    </tr>
+    <div class="lineup-row">
+      <!-- Dorsal -->
+      <div class="lineup-dorsal">
+        {{ a.contrato.dorsal|default:"-" }}
+      </div>
+
+      <!-- Nombre y Posición apilados -->
+      <div class="lineup-player">
+        <span class="lineup-name">{{ a.contrato.jugador.nombre }}</span>
+        <span class="lineup-pos">{{ a.contrato.posicion|capfirst }}</span>
+      </div>
+
+      <!-- Tipo de participación -->
+      <div class="lineup-status">
+        <span class="lineup-badge badge-{{ a.tipo|lower|default:'default' }}">
+          {{ a.tipo|capfirst }}
+        </span>
+      </div>
+    </div>
     {% endfor %}
-  </table>
-  <br>
+  </div>
+</div>
 {% endif %}
+<!-- Botón para abrir el modal (ubicado donde antes estaba la tabla) -->
+<button type="button" class="btn-submit" onclick="document.getElementById('modal-alineacion').showModal()">
+  Configurar Alineación
+</button>
 
-<form method="POST">
-  {% csrf_token %}
+<!-- Estilos específicos del Modal -->
+<style>
+  /* Configuración del diálogo modal */
+  dialog#modal-alineacion {
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
 
-  <table>
-    <tr>
-        <th>Jugador</th>
-        <th>T90</th>
-        <th>TSa</th>
-        <th>Bca</th>
-    </tr>
-       {% for c in contratos %}
-  <tr>
- 
-      <td>{{c.jugador.nombre}} | {{c.posicion}}</td>
-      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="titular90"></td>
-      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="titularSale"></td>
-      <td style="text-align: center;"><input type="radio" name="{{c.id}}" value="bancaEntra"></td>
-    
-  </tr>
-  {% endfor %}
-</table>
-  
+  dialog#modal-alineacion::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+  }
 
-   <br><br>
-  
-  <input type="submit" value="Save LineUP">
+  .modal-form {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+  }
+
+  /* Encabezado fijo */
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-family: 'ArchivoNarrow', Arial, sans-serif;
+    font-size: 1.2rem;
+  }
+
+  .btn-cerrar {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #888;
+  }
+
+  /* Cuerpo del modal (cuadrícula visible de un solo vistazo) */
+  .modal-body {
+    padding: 1rem;
+    overflow-y: auto; /* Por si en un móvil muy pequeño no caben todos */
+  }
+
+  .grid-alineacion {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  @media (min-width: 768px) {
+    .grid-alineacion {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .grid-alineacion {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .tarjeta-jugador {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 6px;
+    background-color: #fafafa;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .tarjeta-jugador .info {
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  .opciones-jugador {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .radio-hidden { display: none; }
+
+  .radio-label {
+    padding: 5px 2px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #555;
+    cursor: pointer;
+    font-family: 'ArchivoNarrow', Arial, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+    user-select: none;
+  }
+
+  .radio-label:hover { background-color: #eaeaea; }
+
+  input[value="titular90"]:checked + .radio-label { background-color: #28a745; color: white; border-color: #28a745; }
+  input[value="titularSale"]:checked + .radio-label { background-color: #ffc107; color: #222; border-color: #ffc107; }
+  input[value="bancaEntra"]:checked + .radio-label { background-color: #0078D4; color: white; border-color: #0078D4; }
+  input[value="roja"]:checked + .radio-label {
+  background-color: #dc3545; /* Rojo */
+  color: white;
+  border-color: #dc3545;
+}
 
 
-</form>
+.badge-roja {
+  background-color: #fde8e8;
+  color: #dc3545;
+  border: 1px solid #f8b4b4;
+}
+
+  /* Pie de modal fijo */
+  .modal-footer {
+    padding: 0.75rem 1.25rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Fuerza a que el título ocupe todo el ancho y rompa la fila */
+.separador-posicion {
+  grid-column: 1 / -1;
+  font-family: 'ArchivoNarrow', Arial, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0078D4;
+  border-bottom: 1.5px solid #dcdfe3;
+  padding: 8px 0 2px 4px;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+</style>
+
+<!-- Estructura del Modal -->
+<dialog id="modal-alineacion">
+  <form method="POST" class="modal-form">
+    {% csrf_token %}
+
+    <div class="modal-header">
+      <h3>Seleccionar Alineación</h3>
+      <button type="button" class="btn-cerrar" onclick="document.getElementById('modal-alineacion').close()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid-alineacion">
+     {% for c in contratos %}
+
+  {% ifchanged c.posicion %}
+    <div class="separador-posicion">
+      {{ c.posicion|capfirst }}
+    </div>
+  {% endifchanged %}
+
+  <div class="tarjeta-jugador">
+    <div class="info">
+      <strong style="font-size: 0.85em;">{{c.jugador.nombre}}</strong><br>
+      <span style="color: gray; font-size: 0.75em;">{{c.posicion|capfirst}}</span>
+    </div>
+
+    <div class="opciones-jugador">
+      <input type="radio" id="m_t90_{{c.id}}" name="{{c.id}}" value="titular90" class="radio-hidden">
+      <label for="m_t90_{{c.id}}" class="radio-label">T90</label>
+
+      <input type="radio" id="m_tsa_{{c.id}}" name="{{c.id}}" value="titularSale" class="radio-hidden">
+      <label for="m_tsa_{{c.id}}" class="radio-label">TSa</label>
+
+      <input type="radio" id="m_bca_{{c.id}}" name="{{c.id}}" value="bancaEntra" class="radio-hidden">
+      <label for="m_bca_{{c.id}}" class="radio-label">Bca</label>
+
+      <!-- Nueva opción: Tarjeta Roja -->
+      <input type="radio" id="m_roj_{{c.id}}" name="{{c.id}}" value="roja" class="radio-hidden">
+      <label for="m_roj_{{c.id}}" class="radio-label">Roja</label>
+    </div>
+  </div>
+{% endfor %}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-submit" style="background-color: #888;" onclick="document.getElementById('modal-alineacion').close()">Cancelar</button>
+      <input type="submit" class="btn-submit" value="Guardar Alineación">
+    </div>
+  </form>
+</dialog>
 <br>
 <hr>
 <h3>Add New Player</h3>
@@ -65,9 +395,32 @@
   <input type="hidden" name="equipo" value="{{this_equipo.id}}">
   <input type="hidden" name="partido" value="{{this_partido.id}}">
   <br><br>
-  <input type="submit" value="Add Player">  
+  <input type="submit" value="Add Player">
 </form>
 
+
+<script>
+  document.querySelectorAll('#modal-alineacion input[type="radio"]').forEach(radio => {
+    // Si viene marcado desde el servidor, guardamos su estado
+    if (radio.checked) {
+      radio.dataset.wasChecked = 'true';
+    }
+
+    radio.addEventListener('click', function() {
+      if (this.dataset.wasChecked === 'true') {
+        // Segundo clic: desmarcar
+        this.checked = false;
+        this.dataset.wasChecked = 'false';
+      } else {
+        // Primer clic: marcar este y limpiar el estado previo de los hermanos
+        document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => {
+          r.dataset.wasChecked = 'false';
+        });
+        this.dataset.wasChecked = 'true';
+      }
+    });
+  });
+</script>
 
 
 {% endblock %}
@@ -79,10 +432,10 @@
 
 <ul class="list-group">
     {% for c in ligas %}
-    
+
 
         <li class="list-group-item"><a href="{% url 'liga' c.id %}" style="text-decoration:none; color:black;">{{c.nombre}}</a> <span class="badge badge-pill">{{c.npartidos}}</span></li>
-      
+
     {% endfor %}
 
 </ul>

@@ -10,4 +10,12 @@ admin.site.register(AttrInteger)
 admin.site.register(AttrDecimal)
 admin.site.register(AttrText)
 admin.site.register(ItemTag)
+admin.site.register(AttrImage)
+admin.site.register(LineaCredito)
+admin.site.register(Depositos)
+admin.site.register(CategoriaGastos)
+admin.site.register(CuentaGasto)
+admin.site.register(TrxGasto)
+admin.site.register(TrxIngreso)
+
 

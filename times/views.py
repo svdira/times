@@ -19,6 +19,8 @@ from operator import itemgetter
 import os
 import requests
 import json
+from decimal import Decimal
+from django.db import transaction
 
 
 from django.db.models import Q
@@ -26,26 +28,26 @@ from django.db.models import Q
 def search_items(request):
     query = request.GET.get('q', '').strip()
     articles = []
-    
+
     if query:
         items_by_title = Item.objects.filter(titulo__icontains=query)
-        
+
 
         items_by_preview = Item.objects.filter(preview__icontains=query)
-        
-    
+
+
         sections = Seccion.objects.filter(
             Q(titulo__icontains=query) | Q(contenido__icontains=query)
         )
         items_by_section = Item.objects.filter(seccion__in=sections)
-        
-     
+
+
         articles = list(items_by_title | items_by_preview | items_by_section)
-        
+
     page = request.GET.get('page', 1)
     paginator = Paginator(articles, 12)
     resultados = paginator.get_page(page)
-    
+
     return render(request, 'search.html', {'articles': resultados, 'query': query})
 
 def homepage(request):
@@ -75,8 +77,11 @@ def addItem(request):
         titulo = request.POST.get("titulo")
         preview = request.POST.get("contenido")
         cat_id = int(request.POST.get("categoria"))
-        pub_date = request.POST.get("pub_date")
         categoria = Categoria.objects.get(pk=int(cat_id))
+        if categoria.nom_categoria in ['book','tv series','TV miniseries','bunko','manga volume','comic book','anime series','show season']:
+            pub_date = '1999-12-31'
+        else:
+            pub_date = request.POST.get("pub_date")
 
         if categoria.nom_categoria == 'journal' and pub_date:
             date_obj = datetime.strptime(pub_date, "%Y-%m-%d")
@@ -157,6 +162,8 @@ def addSeccion(request,item):
 		else:
 			newS = Seccion.objects.create(item = this_item, titulo = request.POST.get("titulo"), contenido = request.POST.get("contenido"),orden=int(request.POST.get("orden")),tipo=request.POST.get("tipo"))
 			newS.save()
+			if 'imagen' in request.FILES:
+			    AttrImageSeccion.objects.create(seccion=this_seccion,imagen=request.FILES['imagen'],att_name='cover', orden=1)
 
 
 		return redirect(f"/item/{this_item.id}")
@@ -171,6 +178,8 @@ def editSeccion(request,seccion):
 		this_seccion.contenido = request.POST.get("contenido")
 		this_seccion.orden = request.POST.get("orden")
 		this_seccion.save()
+		if 'imagen' in request.FILES:
+		    AttrImageSeccion.objects.create(seccion=this_seccion,imagen=request.FILES['imagen'],att_name='cover', orden=1)
 		return redirect('item',item=this_seccion.item.id)
 	return render(request,'edit-seccion.html',{'this_seccion':this_seccion,'mode':mode})
 
@@ -251,9 +260,49 @@ def itemInProgress(request):
 	item_queue = Item.objects.filter(consumo__fec_ini__isnull=False,consumo__fec_fin__isnull=True)
 	return render(request,'item-queue.html',{'item_queue':item_queue})
 
+from django.db.models import Count
+from django.db.models.functions import ExtractYear
+
 def bookHistory(request):
-	item_queue = Consumo.objects.filter(item__tipo__id=1,fec_fin__isnull=False).order_by('-fec_fin')
-	return render(request,'book-history.html',{'item_queue':item_queue,'nbooks':len(item_queue)})
+    con_cats = Categoria.objects.filter(id__in=[1, 2, 4, 5, 9, 10])
+    this_cat = request.GET.get('cat', 1)
+    now_cat = Categoria.objects.get(pk=int(this_cat))
+
+    # Base queryset for the category
+    item_queue = Consumo.objects.filter(
+        item__tipo__id=this_cat,
+        fec_fin__isnull=False
+    )
+
+    # Optional year filtering
+    this_year = request.GET.get('year')
+    if this_year:
+        item_queue = item_queue.filter(fec_fin__year=this_year)
+
+    item_queue = item_queue.order_by('-fec_fin')
+
+    # Counts (respecting the year filter if applied)
+    total_count = item_queue.count()
+    distinct_count = item_queue.values('item__id').distinct().count()
+
+    # Get available years annotated with their total count of consumos
+    available_years = (
+        Consumo.objects.filter(item__tipo__id=this_cat, fec_fin__isnull=False)
+        .annotate(year=ExtractYear('fec_fin'))
+        .values('year')
+        .annotate(count=Count('id'))
+        .order_by('-year')
+    )
+
+    return render(request, 'book-history.html', {
+        'item_queue': item_queue,
+        'total_count': total_count,
+        'distinct_count': distinct_count,
+        'con_cats': con_cats,
+        'now_cat': now_cat,
+        'available_years': available_years,
+        'selected_year': this_year,
+    })
 
 def bookQueue(request):
 	item_queue = Item.objects.filter(tipo__id=1,consumo__fec_ini__isnull=True).order_by('titulo')
@@ -314,3 +363,221 @@ def addMovie(request):
 
 
 	return render(request,'add-movie.html',{})
+
+
+from decimal import Decimal
+
+def addGasto(request):
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        cuenta_id = int(request.POST.get('cuenta'))
+        tipo_origen = int(request.POST.get('tipo_origen'))
+        origen = int(request.POST.get('origen'))
+        monto = Decimal(request.POST.get('monto'))
+        descripcion = request.POST.get('descripcion', '').strip()
+
+        cuenta = CuentaGasto.objects.get(pk=cuenta_id)
+
+        TrxGasto.objects.create(
+            fecha=fecha,
+            cuenta=cuenta,
+            origen=origen,
+            tipo_origen=tipo_origen,
+            monto=monto,
+            descripcion=descripcion
+        )
+
+        # Optional: Automatically update saldo when registering an expense
+        if tipo_origen == 1:  # Deposito (reduces available funds)
+            dep = Depositos.objects.get(pk=origen)
+            dep.saldo -= monto
+            dep.save()
+        elif tipo_origen == 2:  # LineaCredito (increases debt balance)
+            lc = LineaCredito.objects.get(pk=origen)
+            lc.saldo += monto
+            lc.save()
+
+        return redirect('addGasto')
+
+    categorias = CategoriaGastos.objects.prefetch_related('cat_gasto').all().order_by('categoria')
+    depositos = Depositos.objects.all().order_by('nombre')
+    lineas_credito = LineaCredito.objects.all().order_by('nombre')
+    ultimos_gastos = TrxGasto.objects.select_related('cuenta', 'cuenta__categoria').order_by('-fecha', '-id')[:10]
+
+    return render(request, 'add-gasto.html', {
+        'categorias': categorias,
+        'depositos': depositos,
+        'lineas_credito': lineas_credito,
+        'ultimos_gastos': ultimos_gastos,
+        'today': date.today().strftime('%Y-%m-%d'),
+    })
+
+from decimal import Decimal
+
+def addIngreso(request):
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        tipo_destino = int(request.POST.get('tipo_destino'))
+        destino = int(request.POST.get('destino'))
+        monto = Decimal(request.POST.get('monto'))
+
+        TrxIngreso.objects.create(
+            fecha=fecha,
+            destino=destino,
+            tipo_destino=tipo_destino,
+            monto=monto,
+        )
+        if tipo_destino == 1:
+            dep = Depositos.objects.get(pk=destino)
+            dep.saldo += monto
+            dep.save()
+        elif tipo_destino == 2:  # LineaCredito (reduces debt balance)
+            lc = LineaCredito.objects.get(pk=destino)
+            lc.saldo -= monto
+            lc.save()
+
+        return redirect('addIngreso')
+
+    depositos = Depositos.objects.all().order_by('nombre')
+    lineas_credito = LineaCredito.objects.all().order_by('nombre')
+    ultimos_ingresos = TrxIngreso.objects.all().order_by('-fecha', '-id')[:10]
+
+    # Map IDs to names for displaying recent entries cleanly in the sidebar
+    dep_map = {d.id: f"{d.nombre} ({d.entidad})" for d in depositos}
+    lc_map = {lc.id: f"{lc.nombre} ({lc.entidad})" for lc in lineas_credito}
+
+    ingresos_display = []
+    for ing in ultimos_ingresos:
+        if ing.tipo_destino == 1:
+            nombre_destino = dep_map.get(ing.destino, f"Depósito #{ing.destino}")
+            tipo_label = "Depósito"
+        else:
+            nombre_destino = lc_map.get(ing.destino, f"Línea de Crédito #{ing.destino}")
+            tipo_label = "Línea de Crédito"
+
+        ingresos_display.append({
+            'id': ing.id,
+            'fecha': ing.fecha,
+            'monto': ing.monto,
+            'destino_nombre': nombre_destino,
+            'tipo_label': tipo_label,
+        })
+
+    return render(request, 'add-ingreso.html', {
+        'depositos': depositos,
+        'lineas_credito': lineas_credito,
+        'ultimos_ingresos': ingresos_display,
+        'today': date.today().strftime('%Y-%m-%d'),
+    })
+
+
+def _resolve_account_label(tipo, acc_id, dep_map, lc_map):
+    if tipo == 1:
+        return dep_map.get(acc_id, f"Depósito #{acc_id}"), "Depósito"
+    return lc_map.get(acc_id, f"Línea de Crédito #{acc_id}"), "Línea de Crédito"
+
+
+def addTransfer(request):
+    depositos = Depositos.objects.all().order_by('nombre')
+    lineas_credito = LineaCredito.objects.all().order_by('nombre')
+    dep_map = {d.id: f"{d.nombre} ({d.entidad})" for d in depositos}
+    lc_map = {lc.id: f"{lc.nombre} ({lc.entidad})" for lc in lineas_credito}
+
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        tipo_origen = int(request.POST.get('tipo_origen'))
+        origen = int(request.POST.get('origen'))
+        tipo_destino = int(request.POST.get('tipo_destino'))
+        destino = int(request.POST.get('destino'))
+        monto = Decimal(request.POST.get('monto'))
+
+        with transaction.atomic():
+            # Adjust source account balance
+            if tipo_origen == 1:
+                dep_src = Depositos.objects.select_for_update().get(pk=origen)
+                dep_src.saldo -= monto
+                dep_src.save()
+            elif tipo_origen == 2:
+                lc_src = LineaCredito.objects.select_for_update().get(pk=origen)
+                lc_src.saldo += monto
+                lc_src.save()
+
+            # Adjust destination account balance
+            if tipo_destino == 1:
+                dep_dst = Depositos.objects.select_for_update().get(pk=destino)
+                dep_dst.saldo += monto
+                dep_dst.save()
+            elif tipo_destino == 2:
+                lc_dst = LineaCredito.objects.select_for_update().get(pk=destino)
+                lc_dst.saldo -= monto
+                lc_dst.save()
+
+            # Record inflow/payment on destination
+            TrxIngreso.objects.create(
+                fecha=fecha,
+                destino=destino,
+                tipo_destino=tipo_destino,
+                monto=monto,
+            )
+
+        return redirect('addTransfer')
+
+    recent_ingresos = TrxIngreso.objects.all().order_by('-fecha', '-id')[:10]
+    ingresos_display = []
+    for ing in recent_ingresos:
+        nombre, tipo_label = _resolve_account_label(ing.tipo_destino, ing.destino, dep_map, lc_map)
+        ingresos_display.append({
+            'id': ing.id,
+            'fecha': ing.fecha,
+            'monto': ing.monto,
+            'destino_nombre': nombre,
+            'tipo_label': tipo_label,
+        })
+
+    return render(request, 'add-transfer.html', {
+        'depositos': depositos,
+        'lineas_credito': lineas_credito,
+        'ultimos_movimientos': ingresos_display,
+        'today': date.today().strftime('%Y-%m-%d'),
+    })
+
+
+def financeDashboard(request):
+    depositos = Depositos.objects.all().order_by('nombre')
+    lineas_credito = LineaCredito.objects.all().order_by('nombre')
+
+    total_depositos = sum((d.saldo for d in depositos), Decimal('0.00'))
+    total_deuda = sum((lc.saldo for lc in lineas_credito), Decimal('0.00'))
+    posicion_neta = total_depositos - total_deuda
+
+    dep_map = {d.id: f"{d.nombre} ({d.entidad})" for d in depositos}
+    lc_map = {lc.id: f"{lc.nombre} ({lc.entidad})" for lc in lineas_credito}
+
+    gastos = TrxGasto.objects.select_related('cuenta', 'cuenta__categoria').order_by('-fecha', '-id')[:10]
+    total_gastos = TrxGasto.objects.aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+
+    ingresos_raw = TrxIngreso.objects.all().order_by('-fecha', '-id')[:10]
+    total_ingresos = TrxIngreso.objects.aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+
+    ingresos = []
+    for ing in ingresos_raw:
+        nombre, tipo_label = _resolve_account_label(ing.tipo_destino, ing.destino, dep_map, lc_map)
+        ingresos.append({
+            'id': ing.id,
+            'fecha': ing.fecha,
+            'monto': ing.monto,
+            'destino_nombre': nombre,
+            'tipo_label': tipo_label,
+        })
+
+    return render(request, 'finance-dashboard.html', {
+        'depositos': depositos,
+        'lineas_credito': lineas_credito,
+        'total_depositos': total_depositos,
+        'total_deuda': total_deuda,
+        'posicion_neta': posicion_neta,
+        'gastos': gastos,
+        'ingresos': ingresos,
+        'total_gastos': total_gastos,
+        'total_ingresos': total_ingresos,
+    })

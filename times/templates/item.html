@@ -81,7 +81,7 @@
   </ul>
 {% endif %}
 
-{% if this_item.secciones %}{% if nsecciones < 11  %}{% for s in this_item.secciones %}<h2><a href="/edit-seccion/{{s.id}}?mode=edit" style="text-decoration:none; color: orange;">{{s.titulo}}</a></h2>{{s.mdOutput|safe}}
+{% if this_item.secciones %}{% if nsecciones < 11  %}{% for s in this_item.secciones %}<h2><a href="/edit-seccion/{{s.id}}?mode=view" style="text-decoration:none; color: orange;">{{s.titulo}}</a></h2>{{s.mdOutput|safe}}
   {% endfor %}
 
 {% else  %}

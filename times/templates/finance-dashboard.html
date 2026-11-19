@@ -1,0 +1,137 @@
+{% extends 'base_times.html' %}
+{% load static %}
+
+{% block titulo %}The Times | Finanzas{% endblock %}
+
+{% block izquierda %}
+<h2>Resumen Financiero</h2>
+
+<div class="table-container" style="margin-bottom: 1.5rem;">
+  <table>
+    <thead>
+      <tr>
+        <th>Depósitos</th>
+        <th>Deuda Líneas de Crédito</th>
+        <th>Posición Neta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${{ total_depositos }}</td>
+        <td>${{ total_deuda }}</td>
+        <td><strong>${{ posicion_neta }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Depósitos</h2>
+<div class="table-container" style="margin-bottom: 1.5rem;">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Entidad</th>
+        <th>Saldo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in depositos %}
+        <tr>
+          <td>{{ d.nombre }}</td>
+          <td>{{ d.entidad }}</td>
+          <td>${{ d.saldo }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="3">No hay depósitos registrados.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Líneas de Crédito</h2>
+<div class="table-container" style="margin-bottom: 1.5rem;">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Entidad</th>
+        <th>Cuota</th>
+        <th>Saldo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lc in lineas_credito %}
+        <tr>
+          <td>{{ lc.nombre }}</td>
+          <td>{{ lc.entidad }}</td>
+          <td>${{ lc.cuota }}</td>
+          <td>${{ lc.saldo }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">No hay líneas de crédito registradas.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Últimos Gastos (Total acumulado: ${{ total_gastos }})</h2>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Cuenta</th>
+        <th>Descripción</th>
+        <th>Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in gastos %}
+        <tr>
+          <td>{{ g.fecha|date:"Y-m-d" }}</td>
+          <td>{{ g.cuenta.cuenta }}</td>
+          <td>{{ g.descripcion }}</td>
+          <td>${{ g.monto }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">Sin gastos registrados.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block derecha %}
+<ul class="list-group" style="margin-bottom: 1.5rem;">
+  <li class="list-group-item">
+    <a href="{% url 'addGasto' %}" style="text-decoration:none;">+ Registrar Gasto</a>
+  </li>
+  <li class="list-group-item">
+    <a href="{% url 'addIngreso' %}" style="text-decoration:none;">+ Registrar Ingreso / Abono</a>
+  </li>
+  <li class="list-group-item">
+    <a href="{% url 'addTransfer' %}" style="text-decoration:none;">+ Transferir entre Cuentas</a>
+  </li>
+</ul>
+
+<h2>Últimos Ingresos / Abonos (${{ total_ingresos }})</h2>
+<ul class="styled-list">
+  {% for ing in ingresos %}
+    <li>
+      <span class="main-item">{{ ing.destino_nombre }} — ${{ ing.monto }}</span>
+      <span class="sub-item">{{ ing.fecha|date:"Y-m-d" }} · {{ ing.tipo_label }}</span>
+    </li>
+  {% empty %}
+    <li>
+      <span class="sub-item">Sin ingresos registrados.</span>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

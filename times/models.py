@@ -151,6 +151,14 @@ class Seccion(models.Model):
     def __str__(self):
         return self.titulo + ' @ '  + self.item.titulo
 
+    @property
+    def cover_image(self):
+        # Obtiene todas las imágenes asociadas al item
+        imagenes = list(self.attrimageseccion_set.all())
+        if imagenes:
+            return choice(imagenes)
+        return None
+
 class Consumo(models.Model):
     item = models.ForeignKey(Item,on_delete=models.CASCADE,related_name='consumo')
     fec_ini = models.DateField()
@@ -252,3 +260,108 @@ class AttrImage(models.Model):
 
     def __str__(self):
         return f"{self.att_name} @ {self.item.titulo}"
+
+
+class AttrImageSeccion(models.Model):
+    seccion = models.ForeignKey(Seccion, on_delete=models.CASCADE)
+    orden = models.IntegerField(default=1)
+    att_name = models.CharField(max_length=255, default='image')
+    imagen = models.ImageField(upload_to='attr_images/')
+
+    def save(self, *args, **kwargs):
+        # Solo procesa y renombra si es un archivo nuevo/subido (_committed es False)
+        if self.imagen and hasattr(self.imagen, 'file') and not getattr(self.imagen, '_committed', False):
+            try:
+                img = Image.open(self.imagen)
+
+                # Mantener transparencia para PNG o convertir a JPEG
+                if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                    formato = 'PNG'
+                    ext = '.png'
+                else:
+                    formato = 'JPEG'
+                    ext = '.jpg'
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+
+                # Redimensionar manteniendo proporción (máx 400x400)
+                img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+
+                buffer = BytesIO()
+                img.save(buffer, format=formato, quality=85, optimize=True)
+                buffer.seek(0)
+
+                # Código hexadecimal de 32 caracteres (ej: 4f1a8e2b9c3d4e5f6a7b8c9d0e1f2a3b.jpg)
+                hex_name = f"{uuid4().hex}{ext}"
+
+                # Si prefieres una longitud fija más corta (ej: 16 caracteres hex), puedes usar:
+                # hex_name = f"{uuid4().hex[:16]}{ext}"
+
+                self.imagen.save(hex_name, ContentFile(buffer.read()), save=False)
+            except Exception:
+                pass
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.att_name} @ {self.item.titulo}"
+
+
+class LineaCredito(models.Model):
+    tipo = models.CharField(max_length=128)
+    nombre = models.CharField(max_length=128)
+    entidad = models.CharField(max_length=256)
+    fec_oto = models.DateField()
+    fec_ven = models.DateField()
+    monto = models.DecimalField(max_digits=18,decimal_places=2)
+    plazo = models.IntegerField()
+    tasa = models.DecimalField(max_digits=18,decimal_places=2)
+    cuota = models.DecimalField(max_digits=18,decimal_places=2)
+    saldo = models.DecimalField(max_digits=18,decimal_places=2)
+
+    def __str__(self):
+            return self.nombre
+
+class Depositos(models.Model):
+    nombre = models.CharField(max_length=128)
+    entidad = models.CharField(max_length=256)
+    saldo = models.DecimalField(max_digits=18,decimal_places=2)
+
+    def __str__(self):
+                return self.nombre
+
+class CategoriaGastos(models.Model):
+    categoria = models.CharField(max_length=256)
+
+    def __str__(self):
+        return self.categoria
+
+class CuentaGasto(models.Model):
+    categoria = models.ForeignKey(CategoriaGastos, related_name='cat_gasto', on_delete=models.CASCADE)
+    cuenta = models.CharField(max_length=256)
+
+    def __str__(self):
+            return self.cuenta
+
+class TrxGasto(models.Model):
+    fecha = models.DateField()
+    cuenta = models.ForeignKey(CuentaGasto, related_name='cta_gasto', on_delete=models.CASCADE)
+    origen = models.IntegerField()
+    tipo_origen = models.IntegerField()
+    monto = models.DecimalField(max_digits=18,decimal_places=2)
+    descripcion = models.TextField()
+
+    def __str__(self):
+        return str(self.id) + ' - ' + self.cuenta.cuenta
+
+class TrxIngreso(models.Model):
+    fecha = models.DateField()
+    destino = models.IntegerField()
+    tipo_destino = models.IntegerField()
+    monto = models.DecimalField(max_digits=18,decimal_places=2)
+
+    def __str__(self):
+        return str(self.id)
+
+
+

@@ -130,7 +130,7 @@ class Alineacion(models.Model):
 
     def __str__(self):
         return self.contrato.jugador.nombre + 'on partido: ' + str(self.partido.id)
-    
+
     @property
     def icono(self):
         if self.tipo == 'titularSale':
@@ -139,9 +139,11 @@ class Alineacion(models.Model):
         elif self.tipo == 'bancaEntra':
             # &#128896; (Green circle) or &#9650; (Up arrow) or &#8593; (Simple up arrow)
             i = "<span style='color: #22c55e;'>&#9650;</span>"  # ▲
+        elif self.tipo == 'roja':
+            i = "<span style='color: #ef4444; font-size: 1.1em; vertical-align: middle;'>&#9646;</span>"
         else:
             i = ""
-        
+
         return i
 
 class RelTorneoEquipo(models.Model):
